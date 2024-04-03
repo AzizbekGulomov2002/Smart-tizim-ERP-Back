@@ -3,12 +3,8 @@ from django.db import models
 from django.conf import settings
 from datetime import datetime
 from datetime import timedelta
-
 from django.db.models import Sum
-
 from apps.products.models import Product
-
-
 
 
 class Client(models.Model):
@@ -82,25 +78,38 @@ class TradeDetail(models.Model):
 
     size_type = models.CharField(max_length=20, choices=SIZE_TYPE, default="O'lchovsiz")
     trade = models.ForeignKey(Trade, on_delete=models.CASCADE, related_name='trade_details')
-    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='products')
+
     discount_price = models.PositiveIntegerField(default=1)
 
     size = models.FloatField(default=1)
     height = models.FloatField(default=1)
     width = models.FloatField(default=1)
-    quantity = models.FloatField(default=1)
+
+    count = models.FloatField(default=1)
+
+    @property
+    def quantity(self):
+        if self.size_type == "O'lchovli":
+            return self.size * self.count
+        elif self.size_type == "Formatli":
+            return self.height * self.width * self.count
+        elif self.size_type == "O'lchovsiz":
+            return self.count
+        else:
+            return self.count
 
     @property
     def total_summa(self):
-        if self.discount_price > 1:
-            return self.height * self.width * self.quantity * self.discount_price
-        elif self.size > 1:
-            return self.size * self.quantity * self.product.price
+        if self.detail_type == "Narxida":
+            return self.quantity * self.product.price
+        elif self.detail_type == "Chegirmada":
+            return self.quantity * self.discount_price
         else:
-            return self.height * self.width * self.quantity * self.product.price
+            return 0
 
     def __str__(self):
-        return f"{self.trade.trade_date.strftime('%Y-%m-%d %H:%M:%S')}"
+            return f"{self.trade.trade_date.strftime('%Y-%m-%d %H:%M:%S')}"
 
 
 class ServiceType(models.Model):

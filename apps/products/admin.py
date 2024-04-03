@@ -11,7 +11,7 @@ class FormatAdmin(admin.ModelAdmin):
 
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
-    list_display = ('name', 'storage_type', 'category', 'format', 'measure', 'price', 'total_storage_count')
+    list_display = ('name', 'storage_type', 'category', 'format', 'measure', 'price', 'total_storage_count','current_storage_count')
 
 @admin.register(Supplier)
 class SupplierAdmin(admin.ModelAdmin):
@@ -19,7 +19,7 @@ class SupplierAdmin(admin.ModelAdmin):
 
 @admin.register(StorageProduct)
 class StorageProductAdmin(admin.ModelAdmin):
-    list_display = ('storage', 'product', 'storage_count', 'price')
+    list_display = ('storage', 'product',  'price','total_summa','quantity')
 class StorageProductInline(admin.TabularInline):
     model = StorageProduct
     extra = 1

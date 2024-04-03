@@ -32,24 +32,18 @@ class Product(models.Model):
 
     @property
     def total_storage_count(self):
+        total_quantity = sum(product.quantity for product in self.storage_products.all())
+        return total_quantity
+
+    @property
+    def current_storage_count(self):
         total_import = \
-        self.storageproduct_set.filter(storage__action_type='Kiritish').aggregate(total_import=Sum('storage_count'))[
+        self.storage_products.filter(storage__action_type='Kiritish').aggregate(total_import=Sum('count'))[
             'total_import'] or 0
         total_remove = \
-        self.storageproduct_set.filter(storage__action_type='Chiqarish').aggregate(total_remove=Sum('storage_count'))[
+        self.storage_products.filter(storage__action_type='Chiqarish').aggregate(total_remove=Sum('count'))[
             'total_remove'] or 0
         return total_import - total_remove
-
-    # @property
-    # def current_storage_count(self):
-    #     return self.total_storage_count
-    #
-    # @property
-    # def total_size(self):
-    #     total_size = self.storageproduct_set.aggregate(
-    #         total_size=Sum(models.F('height') * models.F('width') * models.F('quantity') * models.F('price')))[
-    #         'total_size']
-    #     return total_size or 0
 
     def __str__(self):
         return self.name
@@ -80,7 +74,7 @@ class Storage(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True)
     action_type = models.CharField(max_length=20, choices=ACTION_TYPE, default='Kiritish')
     storage_type = models.CharField(max_length=20, choices=STORAGE_TYPE, default="Naqtga")
-    supplier = models.ForeignKey(Supplier, on_delete=models.CASCADE)
+    supplier = models.ForeignKey(Supplier, on_delete=models.CASCADE, null=True, blank=True, related_name='storages')
     storage_date = models.DateTimeField()
     desc = models.TextField(null=True, blank=True)
     def __str__(self):
@@ -95,20 +89,31 @@ class StorageProduct(models.Model):
     )
     size_type = models.CharField(max_length=20, choices=SIZE_TYPE, default="O'lchovsiz")
     storage = models.ForeignKey(Storage, on_delete=models.CASCADE)
-    product = models.ForeignKey(Product, on_delete=models.CASCADE)
-    storage_count = models.FloatField()
-    price = models.PositiveIntegerField()
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="storage_products")
+    # storage_count = models.FloatField()
+    price = models.PositiveIntegerField(null=True, blank=True)
     # validation_date = models.DateField()
     # status = models.BooleanField(default=True)
 
     size = models.FloatField(default=1)
     height = models.FloatField(default=1)
     width = models.FloatField(default=1)
-    quantity = models.FloatField(default=1)
+    count = models.FloatField(default=1)
 
-    property
-    def total_size(self):
-        return self.height*self.width*self.quantity*self.price
+    @property
+    def quantity(self):
+        if self.size_type == "O'lchovli":
+            return self.size * self.count
+        elif self.size_type == "O'lchovsiz":
+            return self.count
+        elif self.size_type == "Formatli":
+            return self.height * self.width * self.count
+        else:
+            return 0
+
+    @property
+    def total_summa(self):
+        return self.quantity*self.price
 
     def __str__(self):
         return self.product.name
