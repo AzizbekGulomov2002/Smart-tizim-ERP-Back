@@ -1,14 +1,19 @@
+from datetime import datetime
+
 from django.shortcuts import render
 from rest_framework.response import Response
 from rest_framework import viewsets
 from apps.app.models import Position, Worker
 from apps.app.serializers import PositionSerializer, WorkerSerializer
 from rest_framework.views import APIView
-from django.utils import timezone
+from django.db.models.functions import Coalesce
+
+from apps.finance.models import Payments, FinanceOutcome, Transaction
 from apps.products.models import Product, Category
-from apps.trade.models import Client, Trade
+from apps.trade.models import Client, Trade, TradeDetail, Addition_service
 from django.utils.dateparse import parse_date
-from django.db.models import Count, Sum
+from django.db.models import Count, Sum, F, Value
+
 
 class PositionViewSet(viewsets.ModelViewSet):
     queryset = Position.objects.all()
@@ -20,25 +25,104 @@ class WorkerViewSet(viewsets.ModelViewSet):
 
 
 
-
-
 class DynamicStatistics(APIView):
     def get(self, request):
-        # Get trade count by date
-        trade_by_date = Trade.objects.values('trade_date__date').annotate(trade_count=Count('id'))
-        # Get top products
-        top_products = Product.objects.annotate(trade_count=Count('trade')).order_by('-trade_count')[:10]
-        # Format trade_by_date to match desired output
-        formatted_trade_by_date = [{'trade_date': item['trade_date__date'], 'trade_count': item['trade_count']} for item in trade_by_date]
-        formatted_top_products = [{'product_name': item.name} for item in top_products]
+        # Retrieve start_date and end_date from query parameters
+        start_date_str = request.query_params.get('start_date')
+        end_date_str = request.query_params.get('end_date')
+        start_date = datetime.strptime(start_date_str, '%Y-%m-%d') if start_date_str else None
+        end_date = datetime.strptime(end_date_str, '%Y-%m-%d') if end_date_str else None
 
-        return Response({
-            'trade_by_date': formatted_trade_by_date,
-            'top_products': formatted_top_products,
-        })
+        if start_date and end_date:
+            # Calculate total payment within the specified date range
+            total_cash_payment = Coalesce(Sum('cash'), Value(0))
+            total_card_payment = Coalesce(Sum('card'), Value(0))
+            total_other_payment = Coalesce(Sum('other_pay'), Value(0))
 
+            total_payment = Payments.objects.filter(added__range=[start_date, end_date]) \
+                .aggregate(
+                total_cash_payment=total_cash_payment,
+                total_card_payment=total_card_payment,
+                total_other_payment=total_other_payment
+            )
 
+            # Extract the individual payment totals
+            total_cash = total_payment['total_cash_payment']
+            total_card = total_payment['total_card_payment']
+            total_other = total_payment['total_other_payment']
+            total_payment_summa = total_cash + total_card + total_other
 
+            # Calculate total finance outcome within the specified date range
+            total_finance_outcome = FinanceOutcome.objects.filter(date__range=[start_date, end_date]) \
+                .aggregate(total_outcome=Coalesce(Sum(F('cash') + F('other_pay') + F('card')), Value(0)))['total_outcome']
+
+            # Calculate total trade sum within the specified date range
+            total_trade_summa = 0
+            trade_queryset = Trade.objects.filter(trade_details__trade__trade_date__date__range=[start_date, end_date])
+            for trade in trade_queryset:
+                total_trade_summa += trade.total_trade_summa
+
+            trade_products = TradeDetail.objects.filter(trade__trade_date__date__range=[start_date, end_date]) \
+                .values('product__name') \
+                .annotate(quantity=Sum('quantity')) \
+                .order_by('product__name')
+
+            # Convert queryset to a list of dictionaries
+            trade_products_list = [{'name': item['product__name'], 'quantity': item['quantity']} for item in
+                                   trade_products]
+            addition_services = Addition_service.objects.filter(service_date__range=[start_date, end_date])
+            addition_services_list = [{'name': service.service_type.name, 'price': service.service_price} for service in
+                                      addition_services]
+            total_addition_service = sum(service['price'] for service in addition_services_list)
+
+            # Get transaction names and their total sums
+            transaction_names = []
+            for transaction in Transaction.objects.all():
+                total_sum = FinanceOutcome.objects.filter(tranzaction_type=transaction, date__range=[start_date, end_date]) \
+                    .aggregate(total_sum=Coalesce(Sum(F('cash') + F('other_pay') + F('card')), Value(0)))['total_sum']
+                transaction_names.append({
+                    'name': transaction.name,
+                    'total_sum': total_sum
+                })
+
+            return Response({
+                'total_payments': {
+                    "total_cash_payment": total_cash,
+                    "total_card_payment": total_card,
+                    "total_other_payment": total_other,
+
+                },
+                "total_payment_summa": total_payment_summa,
+                'total_finance_outcome': total_finance_outcome,
+                'total_trade_summa': total_trade_summa,
+                'total_addition_service': total_addition_service,
+                'transaction_names': transaction_names,
+                'addition_services': addition_services_list,
+
+                'trade_products': list(trade_products),
+
+            })
+
+        else:  # If start_date and end_date are not provided
+            # Calculate total payment
+            total_payment = Payments.objects.aggregate(
+                total_payment=Coalesce(Sum('cash'), Value(0)) + Coalesce(Sum('other_pay'), Value(0)) + Coalesce(Sum('card'), Value(0)))['total_payment']
+
+            # Calculate total finance outcome
+            total_finance_outcome = FinanceOutcome.objects.aggregate(
+                total_outcome=Coalesce(Sum(F('cash') + F('other_pay') + F('card')), Value(0)))['total_outcome']
+
+            # Calculate total trade sum
+            total_trade_summa = 0
+            for trade in Trade.objects.all():
+                total_trade_summa += trade.total_trade_summa
+
+            return Response({
+                'total_payment': total_payment,
+                'total_finance_outcome': total_finance_outcome,
+                'total_trade_summa': total_trade_summa,
+                'total_debt_balance': total_trade_summa-total_payment,
+            })
 
 
 
