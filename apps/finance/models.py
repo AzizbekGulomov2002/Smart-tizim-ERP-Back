@@ -62,7 +62,7 @@ class Payments(models.Model):
         return self.cash+self.other_pay+self.card
 
     def __str__(self):
-        return f'{self.added.strftime('%Y-%m-%d %H:%M:%S')}'
+        return f"{self.added.strftime('%Y-%m-%d %H:%M:%S')}"
 
 
     class Meta:
