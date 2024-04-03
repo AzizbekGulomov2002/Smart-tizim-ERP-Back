@@ -1,3 +1,4 @@
+altgraph==0.17.4
 asgiref==3.7.2
 certifi==2024.2.2
 cffi==1.16.0
@@ -13,7 +14,7 @@ django-ckeditor-5==0.2.11
 django-cors-headers==4.3.1
 django-cuser==2017.3.16
 django-filter==23.5
-django-jazzmin==2.6.0
+django-jazzmin==2.6.1
 django-rest-authtoken==2.1.4
 django-rest-swagger==2.2.0
 django-templated-mail==1.1.1
@@ -33,17 +34,18 @@ modeltranslation==0.25
 oauthlib==3.2.2
 openapi-codec==1.3.2
 packaging==23.2
+pefile==2023.2.7
 pillow==10.2.0
 pycparser==2.21
+pyinstaller==6.5.0
+pyinstaller-hooks-contrib==2024.3
 PyJWT==2.8.0
-PyQt5==5.15.10
-PyQt5-Qt5==5.15.2
 PyQt5-sip==12.13.0
-PyQtWebEngine==5.15.6
 PyQtWebEngine-Qt5==5.15.2
 python-dotenv==1.0.1
 python3-openid==3.2.0
 pytz==2024.1
+pywin32-ctypes==0.2.2
 PyYAML==6.0.1
 requests==2.31.0
 requests-oauthlib==1.3.1
