@@ -28,17 +28,14 @@ class ClientSerializer(serializers.ModelSerializer):
     trades = serializers.SerializerMethodField()
 
     def get_total_payments(self, obj):
-        # Aggregate payments for both client and trade associated with the client
-        total_client_payments = Payments.objects.filter(client=obj).aggregate(
-            total=Sum(F('cash') + F('card') + F('other_pay')))
-        total_trade_payments = Payments.objects.filter(trade__client=obj).aggregate(
-            total=Sum(F('cash') + F('card') + F('other_pay')))
+        # Aggregate payments for the client and associated trades
+        total_payments = Payments.objects.filter(
+            client=obj
+        ).aggregate(
+            total=Sum(F('cash') + F('card') + F('other_pay'))
+        )['total'] or 0
+        return total_payments
 
-        # Sum up the total payments for both client and trade
-        total = (total_client_payments['total'] if total_client_payments['total'] else 0) + \
-                (total_trade_payments['total'] if total_trade_payments['total'] else 0)
-
-        return total
     def get_trades(self, obj):
         trades = Trade.objects.filter(client=obj)
         return TradeSerializer(trades, many=True).data

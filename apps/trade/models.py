@@ -17,7 +17,7 @@ class Client(models.Model):
     phone = models.CharField(max_length=13)
     added = models.DateTimeField()
     desc = models.TextField(blank=True, null=True)
-
+    is_active = models.BooleanField(default=False)
 
     def __str__(self):
         return self.name
@@ -54,14 +54,12 @@ class Trade(models.Model):
     def total_trade_summa(self):
         trade_details_sum = sum(detail.total_summa for detail in self.trade_details.all())
         addition_services_sum = sum(service.service_price for service in self.addition_service.all())
-
-        if self.discount_type == "Umumiy savdodan chegirma":
-            return self.discount_summa
-        else:
-            return trade_details_sum + addition_services_sum - self.discount_summa
+        return trade_details_sum + addition_services_sum - self.discount_summa
+        print(self.service_price)
 
 
-def __str__(self):
+
+    def __str__(self):
         return f"{self.trade_date.strftime('%Y-%m-%d %H:%M:%S')} | {self.client.name}"
 
 
@@ -75,7 +73,7 @@ class TradeDetail(models.Model):
         ("Narxida", "Narxida"),
         ("Chegirmada", "Chegirmada"),
     )
-
+    detail_type = models.CharField(max_length=30, choices=DETAIL_TYPE, default="Narxida")
     size_type = models.CharField(max_length=20, choices=SIZE_TYPE, default="O'lchovsiz")
     trade = models.ForeignKey(Trade, on_delete=models.CASCADE, related_name='trade_details')
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='products')
