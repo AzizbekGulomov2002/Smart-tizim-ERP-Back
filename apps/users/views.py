@@ -1,155 +1,83 @@
-from django.contrib.auth.hashers import make_password
-from django.shortcuts import render
-from rest_framework.decorators import renderer_classes
 
-from rest_framework.viewsets import ModelViewSet
-
-# from config.custom_renderers import CustomRenderer
-from .models import *
+from django.contrib.auth.hashers import make_password, check_password
+from rest_framework.views import APIView
+from rest_framework.response import Response
 from rest_framework import status
-from rest_framework.response import Response
+from .models import User ,Company
+from .serializers import CompanySerializer , UserSerializer
+from rest_framework.permissions import IsAuthenticated ,AllowAny
+from rest_framework.authtoken.models import Token
+from .decorator import is_user_permission
 
-from rest_framework_simplejwt.tokens import RefreshToken
-from rest_framework.exceptions import AuthenticationFailed
-from django.contrib.auth import authenticate
+class CreateCompanyUserAPIView(APIView):
+    permission_classes = [AllowAny]
+    def post(self, request):
+        company_serializer = CompanySerializer(data=request.data.get('company'))
+        user_serializer = UserSerializer(data=request.data.get('user'))
+        if user_serializer.is_valid():
+            if company_serializer.is_valid():
+                company_instance = company_serializer.save()
+                user_instance = user_serializer.save(
+                                                    company_id=company_instance.id,
+                                                    is_user_create = True,
+                                                    is_trade = True,
+                                                    is_client = True,
+                                                    is_product = True,
+                                                    is_finance = True,
+                                                    is_statistics = True,
+                                                    is_storage = True
+                                                     )
+                hashed_password = str(make_password(user_instance.password))
+                user_instance.password = hashed_password
+                user_instance.save()
+                return Response({"user": user_serializer.data , 'company':company_serializer.data}, status=status.HTTP_201_CREATED)
+            return Response({"error1": "Kompaniya nomi yoki telefon raqam unikal bo'lishi kerak"}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({"error": "Barcha ma'lumot to'ldirilishi zarur"}, status=status.HTTP_400_BAD_REQUEST)
 
-from rest_framework.permissions import IsAuthenticated, SAFE_METHODS
-from rest_framework.permissions import IsAuthenticatedOrReadOnly
-from django.urls.exceptions import Resolver404
-from rest_framework import generics, status, permissions
-from rest_framework_simplejwt.exceptions import TokenError, InvalidToken
-from rest_framework import generics, views
-
-from rest_framework.response import Response
-from rest_framework.authentication import SessionAuthentication
-
-from .serializers import (
-    UserMeSerializer,
-    DirectorSerializer,
-    ManagerSerializer,
-    UserSerializer,
-    LoginSerializer,
-)
-
-
-class UserMeView(generics.RetrieveAPIView):
-    serializer_class = UserMeSerializer
-    object = User
-    permission_classes = [IsAuthenticated]
-    search_fields = ("username", "first_name", "last_name", "role")
-    def get_object(self):
-        return self.request.user
-
-
-class DirectorViewset(ModelViewSet):
-    permission_classes = [IsAuthenticated]
-    queryset = Director.objects.all()
-    serializer_class = DirectorSerializer
-    search_fields = ("username", "first_name", "last_name", "role")
-
-    def perform_create(self, serializer):
-        # Hash password if provided
-        if 'password' in self.request.data:
-            password = make_password(self.request.data['password'])
-            serializer.save(password=password)
-        else:
-            serializer.save()
-
-    def perform_update(self, serializer):
-        # Hash password if provided
-        if 'password' in self.request.data:
-            password = make_password(self.request.data['password'])
-            serializer.save(password=password)
-        else:
-            serializer.save()
-
-class ManagerViewset(ModelViewSet):
-    permission_classes = [IsAuthenticated]
-    queryset = Manager.objects.all()
-    serializer_class = ManagerSerializer
-    search_fields = ("username", "first_name", "last_name", "role")
-
-    def perform_create(self, serializer):
-        # Hash password if provided
-        if 'password' in self.request.data:
-            password = make_password(self.request.data['password'])
-            serializer.save(password=password)
-        else:
-            serializer.save()
-
-    def perform_update(self, serializer):
-        # Hash password if provided
-        if 'password' in self.request.data:
-            password = make_password(self.request.data['password'])
-            serializer.save(password=password)
-        else:
-            serializer.save()
+    def get(self, request):
+        companies = Company.objects.all()
+        users = User.objects.all()
+        company_serializer = CompanySerializer(companies, many=True)
+        user_serializer = UserSerializer(users, many=True)
+        return Response({"companies": company_serializer.data, "users": user_serializer.data},
+                        status=status.HTTP_200_OK)
 
 
-class UserViewset(ModelViewSet):
-    # authentication_classes = [SessionAuthentication]
-    permission_classes = [IsAuthenticated]
-    queryset = User.objects.all()
-    serializer_class = UserSerializer
-    search_fields = ("username", "first_name", "last_name", "role")
 
-    def create(self, request, *args, **kwargs):
-        data = request.data
+class UserCreateAPIView(APIView):
+    permission_classes =[IsAuthenticated]
+    def post(self, request):
+        if request.user.role == 'COMPANY':
+            password = request.data.pop('password', None)
+            if password:
+                request.data['company_id'] = request.user.company_id
+                request.data['password'] = make_password(password)
+            serializer = UserSerializer(data=request.data)
+            if serializer.is_valid():
+                serializer.save()
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+            return Response( status=status.HTTP_400_BAD_REQUEST)
+        return Response({'status':'sizda bunday huquq yoq'})
+
+
+class LoginApiView(APIView):
+    permission_classes = [AllowAny]
+    def post(self, request):
+        username = request.data.get('username')
+        password = request.data.get('password')
         try:
-            # Check if the role is "Superuser"
-            if data["role"].lower() == "superuser":
-                user = User.objects.create_superuser(
-                    username=data["username"],
-                    first_name=data["first_name"],
-                    last_name=data["last_name"],
-                    password=data["password"],
-                )
-            else:
-                user = User.objects.create_user(
-                    username=data["username"],
-                    first_name=data["first_name"],
-                    last_name=data["last_name"],
-                    password=data["password"],
-                    role=data["role"],
-                )
-            serializer = UserSerializer(user, partial=True)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        except Exception as e:
-            print(e)
-            return Response({"error": "Please be aware"})
+            user = User.objects.get(username=username)
+            print(check_password(password, user.password))
+            print(check_password(password, user.password))
+
+            if check_password(password, user.password):
+                tokens = Token.objects.get_or_create(user=user)
+                return Response({
+                    "token":tokens[0].key,
+                    })
+            return Response({"error": "Foydalanuvchi nomi yoki parolda xatolik"}, status=status.HTTP_401_UNAUTHORIZED)
+        except User.DoesNotExist:
+            return Response({"error": "Foydalanuvchi topilmadi"}, status=status.HTTP_404_NOT_FOUND)
 
 
-class LoginView(generics.GenericAPIView):
-    permission_classes = [permissions.AllowAny]
-    serializer_class = LoginSerializer
 
-    def post(self, request, *args, **kwargs):
-        serializer = self.serializer_class(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        user = authenticate(
-            username=serializer.validated_data["username"],
-            password=serializer.validated_data["password"],
-        )
-
-        if user:
-            refresh = RefreshToken.for_user(user)
-            response_data = {
-                "user": {
-                    "success": True,
-                    "id": user.id,
-                    "username": user.username,
-                    "first_name": user.first_name,
-                    "last_name": user.last_name,
-                    "role": user.role,
-                },
-                "refresh": str(refresh),
-                "access": str(refresh.access_token),
-            }
-            return Response(response_data, status=status.HTTP_200_OK)
-        else:
-            raise AuthenticationFailed(
-                {
-                    "status": False,
-                    "message": "Something went wrong during authentication",
-                }
-            )

@@ -3,29 +3,19 @@ from datetime import datetime
 from django.shortcuts import render
 from rest_framework.response import Response
 from rest_framework import viewsets
-from apps.app.models import Position, Worker
-from apps.app.serializers import PositionSerializer, WorkerSerializer
 from rest_framework.views import APIView
 from django.db.models.functions import Coalesce
 
 from apps.finance.models import Payments, FinanceOutcome, Transaction
 from apps.products.models import Product, Category
-from apps.trade.models import Client, Trade, TradeDetail, Addition_service
+from apps.trade.models import Client, Trade, Addition_service
 from django.utils.dateparse import parse_date
 from django.db.models import Count, Sum, F, Value
-
-
-class PositionViewSet(viewsets.ModelViewSet):
-    queryset = Position.objects.all()
-    serializer_class = PositionSerializer
-
-class WorkerViewSet(viewsets.ModelViewSet):
-    queryset = Worker.objects.all()
-    serializer_class = WorkerSerializer
-
+from .decorator import is_statistics_permission
 
 
 class DynamicStatistics(APIView):
+    @is_statistics_permission
     def get(self, request):
         # Retrieve start_date and end_date from query parameters
         start_date_str = request.query_params.get('start_date')
@@ -62,14 +52,14 @@ class DynamicStatistics(APIView):
             for trade in trade_queryset:
                 total_trade_summa += trade.total_trade_summa
 
-            trade_products = TradeDetail.objects.filter(trade__trade_date__date__range=[start_date, end_date]) \
-                .values('product__name') \
-                .annotate(quantity=Sum('quantity')) \
-                .order_by('product__name')
+            # trade_products = TradeDetail.objects.filter(trade__trade_date__date__range=[start_date, end_date]) \
+            #     .values('product__name') \
+            #     .annotate(quantity=Sum('quantity')) \
+            #     .order_by('product__name')
 
             # Convert queryset to a list of dictionaries
-            trade_products_list = [{'name': item['product__name'], 'quantity': item['quantity']} for item in
-                                   trade_products]
+            # trade_products_list = [{'name': item['product__name'], 'quantity': item['quantity']} for item in
+            #                        trade_products]
             addition_services = Addition_service.objects.filter(service_date__range=[start_date, end_date])
             addition_services_list = [{'name': service.service_type.name, 'price': service.service_price} for service in
                                       addition_services]
@@ -99,7 +89,7 @@ class DynamicStatistics(APIView):
                 'transaction_names': transaction_names,
                 'addition_services': addition_services_list,
 
-                'trade_products': list(trade_products),
+                # 'trade_products': list(trade_products),
 
             })
 
@@ -128,6 +118,7 @@ class DynamicStatistics(APIView):
 
 
 class StaticStatistics(APIView):
+    @is_statistics_permission
     def get(self, request):
         # Retrieve start_date and end_date from query parameters
         start_date_str = request.query_params.get('start_date')

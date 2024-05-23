@@ -12,12 +12,15 @@ class Client(models.Model):
         ('Tezkor', 'Tezkor'),
         ('Doimiy', 'Doimiy'),
     )
+    company_id = models.BigIntegerField(default=0)
     client_type = models.CharField(max_length=20, choices=CLIENT_TYPE,default="Tezkor")
     name = models.CharField(max_length=400)
     phone = models.CharField(max_length=13)
     added = models.DateTimeField()
     desc = models.TextField(blank=True, null=True)
     is_active = models.BooleanField(default=False)
+
+    debt = models.FloatField(null=True, blank=True)
 
     def __str__(self):
         return self.name
@@ -33,13 +36,14 @@ class Trade(models.Model):
         ("Narx bo'yicha chegirma", "Narx bo'yicha chegirma"),
         ("Umumiy savdodan chegirma", "Umumiy savdodan chegirma"),
     )
+    company_id = models.BigIntegerField(default=0)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True)
     trade_type = models.CharField(max_length=20, choices=TRADE_TYPE, default="Naqtga")
     client = models.ForeignKey(Client, on_delete=models.CASCADE)
     discount_type = models.CharField(max_length=24, choices=DISCOUNT_TYPE, default="Umumiy savdodan chegirma",
                                      null=True)
-    discount_summa = models.PositiveIntegerField(default=0)
-    trade_date = models.DateTimeField()
+    discount_summa = models.FloatField(default=0) # noqa
+    trade_date = models.DateTimeField(null=True,blank=True)
     check_id = models.IntegerField(default=10000, null=True, blank=True)
     desc = models.TextField(null=True, blank=True)
 
@@ -55,68 +59,68 @@ class Trade(models.Model):
         trade_details_sum = sum(detail.total_summa for detail in self.trade_details.all())
         addition_services_sum = sum(service.service_price for service in self.addition_service.all())
         return trade_details_sum + addition_services_sum - self.discount_summa
-        print(self.service_price)
-
-
 
     def __str__(self):
-        return f"{self.trade_date.strftime('%Y-%m-%d %H:%M:%S')} | {self.client.name}"
+        return self.client.name
 
 
-class TradeDetail(models.Model):
-    SIZE_TYPE = (
-        ("O'lchovli", "O'lchovli"),
-        ("O'lchovsiz", "O'lchovsiz"),
-        ("Formatli", "Formatli"),
-    )
-    DETAIL_TYPE = (
-        ("Narxida", "Narxida"),
-        ("Chegirmada", "Chegirmada"),
-    )
-    detail_type = models.CharField(max_length=30, choices=DETAIL_TYPE, default="Narxida")
-    size_type = models.CharField(max_length=20, choices=SIZE_TYPE, default="O'lchovsiz")
-    trade = models.ForeignKey(Trade, on_delete=models.CASCADE, related_name='trade_details')
-    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='products')
-
-    discount_price = models.PositiveIntegerField(default=1)
-
-    size = models.FloatField(default=1)
-    height = models.FloatField(default=1)
-    width = models.FloatField(default=1)
-
-    count = models.FloatField(default=1)
-
-    @property
-    def quantity(self):
-        if self.size_type == "O'lchovli":
-            return self.size * self.count
-        elif self.size_type == "Formatli":
-            return self.height * self.width * self.count
-        elif self.size_type == "O'lchovsiz":
-            return self.count
-        else:
-            return self.count
-
-    @property
-    def total_summa(self):
-        if self.detail_type == "Narxida":
-            return self.quantity * self.product.price
-        elif self.detail_type == "Chegirmada":
-            return self.quantity * self.discount_price
-        else:
-            return 0
-
-    def __str__(self):
-            return f"{self.trade.trade_date.strftime('%Y-%m-%d %H:%M:%S')}"
+# class TradeDetail(models.Model):
+#     SIZE_TYPE = (
+#         ("O'lchovli", "O'lchovli"),
+#         ("O'lchovsiz", "O'lchovsiz"),
+#         ("Formatli", "Formatli"),
+#     )
+#     DETAIL_TYPE = (
+#         ("Narxida", "Narxida"),
+#         ("Chegirmada", "Chegirmada"),
+#     )
+#     company_id = models.BigIntegerField(default=0)
+#     detail_type = models.CharField(max_length=30, choices=DETAIL_TYPE, default="Narxida")
+#     size_type = models.CharField(max_length=20, choices=SIZE_TYPE, default="O'lchovsiz")
+#     trade = models.ForeignKey(Trade, on_delete=models.CASCADE, related_name='trade_details')
+#     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='products')
+#
+#     discount_price = models.PositiveIntegerField(default=1)
+#
+#     size = models.FloatField(default=1)
+#     height = models.FloatField(default=1)
+#     width = models.FloatField(default=1)
+#
+#     count = models.FloatField(default=1)
+#
+#     @property
+#     def quantity(self):
+#         if self.size_type == "O'lchovli":
+#             return self.size * self.count
+#         elif self.size_type == "Formatli":
+#             return self.height * self.width * self.count
+#         elif self.size_type == "O'lchovsiz":
+#             return self.count
+#         else:
+#             return self.count
+#
+#     @property
+#     def total_summa(self):
+#         if self.detail_type == "Narxida":
+#             return self.quantity * self.product.price
+#         elif self.detail_type == "Chegirmada":
+#             return self.quantity * self.discount_price
+#         else:
+#             return 0
+#
+#     def __str__(self):
+#             return f"{self.trade.trade_date.strftime('%Y-%m-%d %H:%M:%S')}"
 
 
 class ServiceType(models.Model):
+    company_id = models.BigIntegerField(default=0)
     name = models.CharField(max_length=200)
     def __str__(self):
         return f"{self.name}"
 
 # Addition service class
 class Addition_service(models.Model):
+    company_id = models.BigIntegerField(default=0)
     trade = models.ForeignKey(Trade, on_delete=models.CASCADE, related_name='addition_service')
     service_type = models.ForeignKey(ServiceType, on_delete=models.CASCADE,related_name='addition_service')
     service_price = models.PositiveBigIntegerField()

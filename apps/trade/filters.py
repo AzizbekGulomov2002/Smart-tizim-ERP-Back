@@ -7,11 +7,10 @@ class ClientFilter(django_filters.FilterSet):
     client_type = django_filters.ChoiceFilter(field_name='client_type', choices=Client.CLIENT_TYPE)
     added = django_filters.DateFilter(field_name='added', lookup_expr='date')
     debt_balance = django_filters.NumberFilter(method='filter_debt_balance')
-    status = django_filters.CharFilter(method='filter_status')
 
     class Meta:
         model = Client
-        fields = ['name', 'phone', 'client_type', 'added', 'debt_balance', 'status']
+        fields = ['name', 'phone', 'client_type', 'added', 'debt_balance']
 
     def filter_debt_balance(self, queryset, name, value):
         if value == 'positive':

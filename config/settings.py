@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-b=b(o4xn-1^#+c2$om3t77tic3jlmu+$%huu8b80tzd0+bcod*
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["*"]
+ALLOWED_HOSTS = []
 
 
 # Application definition
@@ -37,7 +37,7 @@ INSTALLED_APPS = [
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
-    'django.contrib.staticfiles',
+    "django.contrib.staticfiles",
 
     'apps.app',
     'apps.products',
@@ -45,14 +45,40 @@ INSTALLED_APPS = [
     'apps.trade',
     'apps.finance',
 
+    'rest_framework.authtoken',
     "rest_framework",
     "corsheaders",
     "django_filters",
-    "rest_framework_simplejwt",
-    "drf_yasg",
+
+    # "rest_framework_simplejwt",
+    # "drf_yasg",
     "rest_framework_simplejwt.token_blacklist",
+    "debug_toolbar",
 
 ]
+
+INTERNAL_IPS = [
+    "127.0.0.1",
+]
+#
+LOGGING = {
+    'version':1,
+    'handlers':{
+         'file': {
+            'level': 'DEBUG',
+            'class': 'logging.FileHandler',
+            'filename': 'debug.log'
+        },
+        'console':{'class':'logging.StreamHandler'}
+    },
+    'loggers':{
+        'django.db.backends':{
+            'handlers':['file'],
+            'level':'DEBUG'
+                    }
+               }
+}   #  mobodo debug tulbar ishlamasa
+
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -62,6 +88,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    "debug_toolbar.middleware.DebugToolbarMiddleware",
 ]
 
 ROOT_URLCONF = 'config.urls'
@@ -99,26 +126,43 @@ DATABASES = {
 
 
 REST_FRAMEWORK = {
-    # This is for JSON
-    # "DEFAULT_RENDERER_CLASSES": (
-    #     "config.custom_renderers.CustomRenderer",
-    #     "rest_framework.renderers.JSONRenderer",
-    # ),
-    "DEFAULT_AUTHENTICATION_CLASSES": (
-        'rest_framework.authentication.BasicAuthentication',
-        # 'rest_authtoken.auth.AuthTokenAuthentication',
-        # "rest_framework.authentication.SessionAuthentication",
-        "rest_framework_simplejwt.authentication.JWTAuthentication",
+    'DEFAULT_RENDERER_CLASSES': (
+        'rest_framework.renderers.JSONRenderer',
     ),
-    # 'DEFAULT_PERMISSION_CLASSES': (
-    #     'rest_framework.permissions.AllowAny',
-    # ),
-    "DEFAULT_PERMISSION_CLASSES": [
-        "rest_framework.permissions.IsAuthenticated",
+     'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.AllowAny',
     ],
-    "DEFAULT_FILTER_BACKENDS": ("django_filters.rest_framework.DjangoFilterBackend",),
-    # "DATETIME_FORMAT": "%Y-%m-%d %H:%M:%S",
+     'DEFAULT_PARSER_CLASSES': [
+        'rest_framework.parsers.JSONParser',
+        'rest_framework.parsers.FormParser',
+        'rest_framework.parsers.MultiPartParser',
+     ],
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.TokenAuthentication',
+    ],
 }
+
+# REST_FRAMEWORK = {
+#     # This is for JSON
+#     # "DEFAULT_RENDERER_CLASSES": (
+#     #     "config.custom_renderers.CustomRenderer",
+#     #     "rest_framework.renderers.JSONRenderer",
+#     # ),
+#     "DEFAULT_AUTHENTICATION_CLASSES": (
+#         'rest_framework.authentication.BasicAuthentication',
+#         # 'rest_authtoken.auth.AuthTokenAuthentication',
+#         # "rest_framework.authentication.SessionAuthentication",
+#         "rest_framework_simplejwt.authentication.JWTAuthentication",
+#     ),
+#     # 'DEFAULT_PERMISSION_CLASSES': (
+#     #     'rest_framework.permissions.AllowAny',
+#     # ),
+#     "DEFAULT_PERMISSION_CLASSES": [
+#         "rest_framework.permissions.IsAuthenticated",
+#     ],
+#     "DEFAULT_FILTER_BACKENDS": ("django_filters.rest_framework.DjangoFilterBackend",),
+#     # "DATETIME_FORMAT": "%Y-%m-%d %H:%M:%S",
+# }
 
 
 # Password validation
@@ -220,6 +264,7 @@ JAZZMIN_SETTINGS = {
         "users.User": "fa fa-users",
         "users.Director": "fa fa-user",
         "users.Manager": "fa fa-user-circle",
+        "users.Company": "fa fa-building",
     },
     "default_icon_parents": "fas fa-chevron-circle-right",
     "default_icon_children": "fas fa-circle",

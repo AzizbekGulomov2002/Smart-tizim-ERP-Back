@@ -1,18 +1,21 @@
 from django.db import models
+from apps.users.models import User
+
 
 # Create your models here.
-
-
-class Position(models.Model):
-    name = models.CharField(max_length=200)
-    def __str__(self):
-        return self.name
-    
-class Worker(models.Model):
-    position = models.ForeignKey(Position, on_delete=models.CASCADE)
-    name = models.CharField(max_length=400)
-    phone = models.CharField(max_length=13)
-    desc = models.TextField(blank=True, null=True)
-    added = models.DateTimeField()
-    def __str__(self):
-        return self.name
+# class Company(models.Model):
+#     user = models.OneToOneField(User, on_delete=models.CASCADE)
+#     comp_name = models.CharField(max_length=500)
+#     first_name = models.CharField(max_length=200)
+#     family_name = models.CharField(max_length=200)
+#     phone = models.IntegerField()
+#     email = models.EmailField()
+#
+#     is_active = models.BooleanField(default=True)
+#
+#     start_date = models.DateTimeField(null=True,blank=True)
+#     end_date = models.DateTimeField(null=True,blank=True)
+#     sum = models.IntegerField(default=0)
+#
+#     def __str__(self):
+#         return self.comp_name

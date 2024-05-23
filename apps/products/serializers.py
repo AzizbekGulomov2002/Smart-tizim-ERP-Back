@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from apps.products.models import Category, Format, Product, Supplier, Storage, StorageProduct
+from apps.products.models import Category, Product, Supplier, Storage, StorageProduct
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -8,44 +8,19 @@ class CategorySerializer(serializers.ModelSerializer):
         model = Category
         fields = '__all__'
 
-class FormatSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Format
-        fields = '__all__'
-
-
-
-
-
-class ProductSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Product
-        fields = '__all__'
 
 class StorageProductSerializer(serializers.ModelSerializer):
-    product = serializers.SerializerMethodField()
-    format = serializers.SerializerMethodField()
-
     class Meta:
         model = StorageProduct
-        fields = '__all__'
+        fields = ["id","count"]
 
-    def get_product(self, obj):
-        product = obj.product
-        return {
-            'id': product.id,
-            'name': product.name,
-            'storage_type': product.storage_type,
-            'price': product.measure,
-        }
+class ProductSerializer(serializers.ModelSerializer):
+    # storage_products = StorageProductSerializer(many=True)
+    class Meta:
+        model = Product
+        fields = ['id','name','storage_type','price','format','bar_code','storage_products'] # <  qoganlari ozgarsaham  storage_products   shu ozgarmasin
+        depth = 1
 
-    def get_format(self, obj):
-        product = obj.product
-        format_obj = product.format
-        return {
-            'id': format_obj.id,
-            'name': format_obj.name
-        }
 
 
 class StorageSerializer(serializers.ModelSerializer):
@@ -75,10 +50,9 @@ class StorageSerializer(serializers.ModelSerializer):
 
 class SupplierSerializer(serializers.ModelSerializer):
     storage_products = serializers.SerializerMethodField()
-
     class Meta:
         model = Supplier
-        fields = ['supplier_type', 'name', 'phone', 'added', 'desc', 'storage_products']
+        fields = ["id",'supplier_type', 'name', 'phone', 'added', 'desc', 'storage_products']
 
     def get_storage_products(self, obj):
         # Retrieve all related StorageProduct instances for the Supplier

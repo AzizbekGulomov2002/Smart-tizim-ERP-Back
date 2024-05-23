@@ -1,81 +1,51 @@
+from datetime import timezone
+
 from django.db import models
-from django.utils.html import format_html
-from django.utils.translation import gettext_lazy as _
-from django.contrib.auth.models import AbstractUser, BaseUserManager, PermissionsMixin
+from django.contrib.auth.models import AbstractUser
 
 
-class User(AbstractUser, PermissionsMixin):
+class Company(models.Model):
+    comp_name = models.CharField(max_length=500,unique=True)
+    phone = models.IntegerField(unique=True)
+    email = models.EmailField(null=True,unique=True, blank=True)
+    is_active = models.BooleanField(default=True)
+
+    start_date = models.DateField(null=True,blank=True)
+    end_date = models.DateField(null=True,blank=True)
+    sum = models.IntegerField(default=0)
+
+    def __str__(self):
+        return self.comp_name
+
+
+
+
+
+class User(AbstractUser):
+    company_id = models.BigIntegerField(default=0)
     class Role(models.TextChoices):
+        COMPANY = "COMPANY" , "company"
         DIRECTOR = "DIRECTOR", "director"
         MANAGER = "MANAGER", "manager"
+        KASSA  = 'KASSA' ,'kassa'
+        STORAGE = 'STORAGE' ,'storage'
 
+    is_user_create = models.BooleanField(default=False)
+    is_trade = models.BooleanField(default=False)
+    is_client = models.BooleanField(default=False)
+    is_product = models.BooleanField(default=False)
+    is_finance = models.BooleanField(default=False)
+    is_statistics = models.BooleanField(default=False)
+    is_storage = models.BooleanField(default=False)
+
+    salary = models.PositiveIntegerField('maoshi',default=0)
+    wallet = models.IntegerField('qarzi haqqi',default=0)
     description = models.TextField(verbose_name="Description", null=True, blank=True)
     role = models.CharField(max_length=15, choices=Role.choices)
-
+    def __str__(self):
+        return self.username
     class Meta:
         db_table = "User"
 
 
-class DirectorManager(BaseUserManager):
-    def create_user(self, username, password=None):
-        if not username or len(username) <= 0:
-            raise ValueError("Username field is required !")
-        if not password:
-            raise ValueError("Password is must !")
 
-        user = self.model(username=username)
-        user.set_password(password)
-        user.save(using=self._db)
-        return user
-
-    def get_queryset(self, *args, **kwargs):
-        result = super().get_queryset(*args, **kwargs)
-        return result.filter(role=User.Role.DIRECTOR)
-
-
-class Director(User):
-    base_role = User.Role.DIRECTOR
-
-    class Meta:
-        proxy = True
-
-    def save(self, *args, **kwargs):
-        if not self.pk:
-            self.role = self.base_role
-            return super().save(*args, **kwargs)
-
-    objects = DirectorManager()
-
-
-# Manager table
-
-
-class ManagerManager(BaseUserManager):
-    def create_user(self, username, password=None):
-        if not username or len(username) <= 0:
-            raise ValueError("Username field is required !")
-        if not password:
-            raise ValueError("Password is must !")
-
-        user = self.model(username=username)
-        user.set_password(password)
-        user.save(using=self._db)
-        return user
-
-    def get_queryset(self, *args, **kwargs):
-        result = super().get_queryset(*args, **kwargs)
-        return result.filter(role=User.Role.DIRECTOR)
-
-
-class Manager(User):
-    base_role = User.Role.MANAGER
-
-    class Meta:
-        proxy = True
-
-    def save(self, *args, **kwargs):
-        if not self.pk:
-            self.role = self.base_role
-            return super().save(*args, **kwargs)
-
-    objects = ManagerManager()

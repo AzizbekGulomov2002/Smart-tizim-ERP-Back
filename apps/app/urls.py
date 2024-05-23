@@ -1,10 +1,9 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from apps.app.views import PositionViewSet, WorkerViewSet, StaticStatistics,DynamicStatistics
+from apps.app.views import StaticStatistics,DynamicStatistics
 
 router = DefaultRouter()
-router.register(r'positions', PositionViewSet)
-router.register(r'workers', WorkerViewSet)
+
 
 urlpatterns = [
     path('', include(router.urls)),

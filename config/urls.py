@@ -1,10 +1,11 @@
 from django.contrib import admin
+from apps.users.status_admin import off_view, on_view
+from apps.users.views import LoginApiView, CreateCompanyUserAPIView, UserCreateAPIView
 from django.urls import path, include
 from rest_framework import routers
 from rest_framework.documentation import include_docs_urls
 from rest_framework.schemas import get_schema_view
 from rest_framework_swagger.views import get_swagger_view
-from apps.users.views import LoginView
 from django.urls import path
 from rest_framework import permissions
 from drf_yasg.views import get_schema_view
@@ -14,17 +15,8 @@ from rest_framework_simplejwt.views import (
     TokenRefreshView,
     TokenVerifyView,
 )
-
-# Define Swagger UI view
 swagger_view = get_swagger_view(title='API')
-
-# Define router for API endpoints
 router = routers.DefaultRouter()
-# Register your viewsets with the router here if you have any
-
-
-
-
 schema_view = get_schema_view(
     openapi.Info(
         title="Smart-tizim ERP",
@@ -39,17 +31,25 @@ schema_view = get_schema_view(
 )
 
 
-
-
 urlpatterns = [
+
+    path('off/',off_view),
+    path('on/',on_view),
+
+    path('create_user_company/', CreateCompanyUserAPIView.as_view()),
+    path('create/', UserCreateAPIView.as_view()),
+
     path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
     path('docs/', include_docs_urls(title='API Documentation')),
     path('swagger/', swagger_view),
     path('admin/', admin.site.urls),
     path('api/', include('apps.urls')),
-    path('login/', LoginView.as_view(), name='login'),
+
+    path('login/', LoginApiView.as_view(), name='login'),
     path('auth/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('auth/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('auth/token/verify/', TokenVerifyView.as_view(), name='token_verify'),
     path('api-auth/', include('rest_framework.urls', namespace='rest_framework')),
+
+    path("__debug__/", include("debug_toolbar.urls")),
 ]

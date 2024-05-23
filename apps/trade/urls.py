@@ -1,17 +1,17 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 
-from apps.trade.views import ClientViewSet, TradeViewSet, TradeDetailViewSet, ServiceTypeViewSet, \
+from apps.trade.views import ClientViewSet, TradeApiView, ServiceTypeViewSet, \
     AdditionServiceViewSet
 
 router = DefaultRouter()
-router.register(r'clients', ClientViewSet)
-router.register(r'trades', TradeViewSet)
-router.register(r'trade-details', TradeDetailViewSet)
-router.register(r'service-types', ServiceTypeViewSet)
-router.register(r'addition-services', AdditionServiceViewSet)
+router.register(r'clients', ClientViewSet, basename='clients')
+
+# router.register(r'trade-details', TradeDetailViewSet)
+router.register(r'service-types', ServiceTypeViewSet, basename='service-types')
+router.register(r'addition-services', AdditionServiceViewSet, basename='addition-services')
 
 urlpatterns = [
-    path('', include(router.urls)),
-    # path('clients/<int:pk>/trades/', ClientTradeListAPIView.as_view(), name='client-trade-list'),
+    path('trades/', TradeApiView.as_view(), name='trades'),  # Use path for generic API views
+    path('', include(router.urls)),  # Include the router's URLs
 ]

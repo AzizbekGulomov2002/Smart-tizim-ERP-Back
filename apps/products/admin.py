@@ -1,17 +1,17 @@
 from django.contrib import admin
-from .models import Category, Format, Product, Supplier, Storage, StorageProduct
+from .models import Category, Product, Supplier, Storage, StorageProduct
 
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
     list_display = ('name',)
 
-@admin.register(Format)
-class FormatAdmin(admin.ModelAdmin):
-    list_display = ('name',)
+# @admin.register(Format)
+# class FormatAdmin(admin.ModelAdmin):
+#     list_display = ('name',)
 
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
-    list_display = ('name', 'storage_type', 'category', 'format', 'measure', 'price', 'total_storage_count','current_storage_count')
+    list_display = ('name', 'storage_type', 'category', 'format', 'price', 'total_storage_count','current_storage_count')
 
 @admin.register(Supplier)
 class SupplierAdmin(admin.ModelAdmin):

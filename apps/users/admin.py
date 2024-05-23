@@ -1,34 +1,19 @@
 from django.contrib import admin
+from .models import User, Company
 
-# Register your models here.
-from apps.users.forms import *
-from apps.users.models import *
-from django.contrib.auth.admin import UserAdmin
-
-
-
-class MyAdmin(UserAdmin):
-    list_filter = ["role", "is_active", "is_staff", "is_superuser"]
-    list_display = ["role", "username", "email", "is_staff", "is_superuser"]
+class CompanyAdmin(admin.ModelAdmin):
+    list_display = ('id', 'comp_name', 'phone', 'email', 'is_active', 'start_date', 'end_date', 'sum')
+    search_fields = ('comp_name', 'phone', 'email')
+    list_filter = ('is_active', 'start_date', 'end_date')
+    fields = ('comp_name', 'phone', 'email', 'is_active', 'start_date', 'end_date', 'sum')
+    ordering = ('comp_name',)
+admin.site.register(Company, CompanyAdmin)
 
 
-admin.site.register(User, MyAdmin)
 
+class CustomUserAdmin(admin.ModelAdmin):
+    list_display = ('username', 'is_active', 'company_id', 'role', 'is_user_create', 'is_trade', 'is_client', 'is_product', 'is_finance', 'is_statistics', 'is_storage')
+    search_fields = ('username', 'is_active', 'company_id')  # Add more fields if needed
 
-class DirectorAdmin(UserAdmin):
-    list_filter = ["role", "is_active"]
-    model = Director
-    add_form = DirectorForm
+admin.site.register(User, CustomUserAdmin)
 
-
-admin.site.register(Director, DirectorAdmin)
-# #########################
-
-
-class ManagerAdmin(UserAdmin):
-    list_filter = ["role", "is_active"]
-    model = Manager
-    add_form = ManagerForm
-
-
-admin.site.register(Manager, ManagerAdmin)
