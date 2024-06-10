@@ -19,7 +19,7 @@ class TradeAdmin(admin.ModelAdmin):
         PaymentsInline,
     ]
     list_display = ('id', 'client', 'trade_date', 'trade_type', 'check_id')
-    list_filter = ('trade_type', 'discount_type', 'client')
+    list_filter = ('trade_type', 'client')
     search_fields = ['client__name', 'desc']
     date_hierarchy = 'trade_date'
 
@@ -27,7 +27,7 @@ class TradeInline(admin.TabularInline):
     model = Trade
 class ClientAdmin(admin.ModelAdmin):
     inlines = [TradeInline, ]
-    list_display = ('name', 'phone', 'added',)
+    list_display = ("id",'name', 'phone', 'added',)
     search_fields = ['name', 'phone']
     date_hierarchy = 'added'
 

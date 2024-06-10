@@ -2,7 +2,7 @@ from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 
 from apps.trade.views import ClientViewSet, TradeApiView, ServiceTypeViewSet, \
-    AdditionServiceViewSet
+    AdditionServiceViewSet,ClientDeleteManagerAPI
 
 router = DefaultRouter()
 router.register(r'clients', ClientViewSet, basename='clients')
@@ -12,6 +12,7 @@ router.register(r'service-types', ServiceTypeViewSet, basename='service-types')
 router.register(r'addition-services', AdditionServiceViewSet, basename='addition-services')
 
 urlpatterns = [
-    path('trades/', TradeApiView.as_view(), name='trades'),  # Use path for generic API views
+    path('trades/', TradeApiView.as_view(), name='trades'), 
+    path('delete_clients/', ClientDeleteManagerAPI.as_view(), name='delete_clients'), 
     path('', include(router.urls)),  # Include the router's URLs
 ]

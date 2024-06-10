@@ -1,6 +1,6 @@
 from django.db import models
 from django.conf import settings
-
+from apps.app.models import BaseModel
 from apps.products.models import Storage
 from apps.trade.models import Trade, Client
 
@@ -8,7 +8,7 @@ from apps.trade.models import Trade, Client
 # Create your models here.
 
 
-class Transaction(models.Model):
+class Transaction(BaseModel):
     ACTION_TYPE = (
         ('kirim', "kirim"),
         ('chiqim', "chiqim"),
@@ -19,8 +19,8 @@ class Transaction(models.Model):
         ('hodim', "hodim"),
         ('boshqa', "Boshqa")
     )
-    company_id = models.BigIntegerField(default=0)
-    name = models.CharField(max_length=400, null=True, blank=True)
+    # company_id = models.BigIntegerField(default=0)
+    # name = models.CharField(max_length=400, null=True, blank=True)
     action_type = models.CharField(max_length=100, choices=ACTION_TYPE, default='kirim')
     transaction_type = models.CharField(max_length=100, choices=TRANSACTION_TYPE)
     def __str__(self):
@@ -72,11 +72,11 @@ class Payments(models.Model):
 
 
 
-class FinanceOutcome(models.Model):
+class FinanceOutcome(BaseModel):
+    # company_id = models.BigIntegerField(default=0)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True)
-    name = models.CharField(max_length=400)
+    # name = models.CharField(max_length=400)
     tranzaction_type = models.ForeignKey(Transaction, on_delete=models.CASCADE)
-
     client = models.ForeignKey(Client, on_delete=models.CASCADE, null=True, blank=True)
     storage = models.ForeignKey(Storage, on_delete=models.CASCADE, null=True, blank=True)
 

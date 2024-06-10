@@ -1,5 +1,5 @@
 from django.contrib import admin
-from apps.users.status_admin import off_view, on_view
+from apps.users.status_admin import company_off_view, company_on_view
 from apps.users.views import LoginApiView, CreateCompanyUserAPIView, UserCreateAPIView
 from django.urls import path, include
 from rest_framework import routers
@@ -30,11 +30,12 @@ schema_view = get_schema_view(
     permission_classes=(permissions.AllowAny,),
 )
 
-
+from apps.products.views import StorageProductCreate
 urlpatterns = [
 
-    path('off/',off_view),
-    path('on/',on_view),
+    path('',StorageProductCreate.as_view()),
+    path('company_off/',company_off_view),
+    path('company_on/',company_on_view),
 
     path('create_user_company/', CreateCompanyUserAPIView.as_view()),
     path('create/', UserCreateAPIView.as_view()),

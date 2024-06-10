@@ -8,27 +8,47 @@ from django.utils import timezone
 
 
 @api_view(['GET'])
-def off_view(request):
+def company_off_view(request):
     companies = Company.objects.all()
     now = timezone.now().date()
+    response_data = []
+
     for company in companies:
-        end_date = company.end_date
-        if isinstance(end_date, date) and end_date <= now:
-            print(company.is_active)
-            print(type(company.end_date))
-            print(type(now))
+        if company.end_date <= now:
+            print("Today: ",now)
+            print("End date: ",company.end_date)
             company.is_active = False
+            print("Company name : ",company.comp_name,company.is_active)
             company.save()
             users = User.objects.filter(company_id=company.id)
             for user in users:
+                print("Username: ",user.username, user.is_active)
                 user.is_active = False
                 user.save()
-    return Response(status=status.HTTP_200_OK)
+            response_data.append({
+                "company_id": company.id,
+                "status": "Muddati o'tgan"
+            })
+        else:
+            company.is_active = True
+            company.save()
+            print("Company name : ", company.comp_name, company.is_active)
+            users = User.objects.filter(company_id=company.id)
+            for user in users:
+                user.is_active = True
+                user.save()
+                print("Username: ", user.username, user.is_active)
+            response_data.append({
+                "company_id": company.id,
+                "status": True
+            })
+
+    return Response(response_data, status=status.HTTP_200_OK)
 
 
 
 @api_view(['GET'])
-def on_view(request):
+def company_on_view(request):
     company = Company.objects.all()
     for i in company:
         if i.is_active == True:

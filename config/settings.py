@@ -51,8 +51,8 @@ INSTALLED_APPS = [
     "django_filters",
 
     # "rest_framework_simplejwt",
-    # "drf_yasg",
-    "rest_framework_simplejwt.token_blacklist",
+    "drf_yasg",
+    # "rest_framework_simplejwt.token_blacklist",
     "debug_toolbar",
 
 ]
@@ -60,7 +60,7 @@ INSTALLED_APPS = [
 INTERNAL_IPS = [
     "127.0.0.1",
 ]
-#
+
 LOGGING = {
     'version':1,
     'handlers':{
@@ -189,7 +189,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'uz-uz'
 
-TIME_ZONE = 'Asia/Tashkent'
+TIME_ZONE = 'UTC'
 
 USE_I18N = True
 
@@ -265,6 +265,8 @@ JAZZMIN_SETTINGS = {
         "users.Director": "fa fa-user",
         "users.Manager": "fa fa-user-circle",
         "users.Company": "fa fa-building",
+
+        "users.CompanyPayments": "fa fa-credit-card",
     },
     "default_icon_parents": "fas fa-chevron-circle-right",
     "default_icon_children": "fas fa-circle",

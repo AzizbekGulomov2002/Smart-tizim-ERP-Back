@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from rest_framework import viewsets, status
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
@@ -14,7 +14,39 @@ from ..finance.models import Payments , Transaction
 from ..finance.serializers import PaymentsSerializer
 from .decorator import is_client_permission, is_trade_permission
 
-
+# noqa
+class ClientDeleteManagerAPI(APIView):
+    permission_classes = [IsAuthenticated]
+    def get(self, request):
+        company_id = self.request.user.company_id
+        all_delete = datetime.now().date() - timedelta(days=30)
+        delete_clients = Client.all_objects.filter(company_id=company_id,deleted__lt=all_delete)
+        if delete_clients.exists():
+            delete_clients.delete()
+        deleted = datetime.now().date() - timedelta(days=30)
+        clients = Client.all_objects.filter(company_id=company_id,deleted__gte=deleted)
+        serializer = ClientSerializer(clients, many=True)
+        return Response(serializer.data)
+    @is_client_permission
+    def post(self,request):
+        data = request.data
+        try:
+            id =  data['client']['id']
+            client = Client.all_objects.get(id=id)
+            client.restore()
+        except: pass
+        return Response({"status":'ok'})
+    @is_client_permission
+    def delete(self,request):
+        company_id = self.request.user.company_id
+        # print(request.user)
+        # print(company_id)
+        all_delete = datetime.now().date()
+        client =  Client.all_objects.filter(company_id=company_id,deleted__lte=all_delete)
+        # print(company_id)
+        client.delete()
+        return Response({"status":'ok'})
+    
 
 class ClientViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
@@ -33,6 +65,7 @@ class ClientViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(instance)
         return Response(serializer.data)
     @is_client_permission
+    # limit 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():
@@ -52,6 +85,7 @@ class ClientViewSet(viewsets.ModelViewSet):
         instance = self.get_object()
         instance.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
 
 class TradeApiView(APIView):
     permission_classes = [IsAuthenticated]
@@ -134,6 +168,7 @@ class TradeApiView(APIView):
         except Exception as e:
             return Response({"status": "error", "message": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+    
 
 class ServiceTypeViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]

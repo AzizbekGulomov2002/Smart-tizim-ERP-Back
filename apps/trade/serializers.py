@@ -18,30 +18,6 @@ class AdditionServiceSerializer(serializers.ModelSerializer):
 
 
 class ClientSerializer(serializers.ModelSerializer):
-    # total_payments = serializers.SerializerMethodField()
-    #
-    # def get_total_payments(self, obj):
-    #     total_payments = Payments.objects.filter(
-    #         client=obj
-    #     ).aggregate(
-    #         total=Sum(F('cash') + F('card') + F('other_pay'))
-    #     )['total'] or 0
-    #     return total_payments
-
-    # def get_trades(self, obj):
-    #     trades = Trade.objects.filter(client=obj)
-    #     return TradeSerializer(trades, many=True).data
-    # def get_debt_balance(self, obj):
-    #     total_trade_summa = sum(trade.total_trade_summa for trade in obj.trade_set.all())
-    #     total_payments_summa = self.get_total_payments(obj)
-    #     return total_trade_summa - total_payments_summa
-    # def get_status(self, obj):
-    #     debt_balance = self.get_debt_balance(obj)
-    #     if debt_balance > 0:
-    #         return "Qarzdor"
-    #     else:
-    #         return "To'langan"
-
     class Meta:
         model = Client
         fields = "__all__"

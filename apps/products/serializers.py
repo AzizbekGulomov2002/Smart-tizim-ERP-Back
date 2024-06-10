@@ -1,12 +1,12 @@
 from rest_framework import serializers
 
-from apps.products.models import Category, Product, Supplier, Storage, StorageProduct
+from apps.products.models import Category, Product, Supplier, Storage, StorageProduct ,Format
 
 
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Category
-        fields = '__all__'
+        fields = ["id","name"]
 
 
 class StorageProductSerializer(serializers.ModelSerializer):
@@ -18,7 +18,7 @@ class ProductSerializer(serializers.ModelSerializer):
     # storage_products = StorageProductSerializer(many=True)
     class Meta:
         model = Product
-        fields = ['id','name','storage_type','price','format','bar_code','storage_products'] # <  qoganlari ozgarsaham  storage_products   shu ozgarmasin
+        fields = ['id','name','storage_type', "category",'price','format','bar_code', 'storage_products'] # <  qoganlari ozgarsaham  storage_products   shu ozgarmasin
         depth = 1
 
 
@@ -48,23 +48,30 @@ class StorageSerializer(serializers.ModelSerializer):
         data['user'] = user_data
         return data
 
+class  FormatSerializer (serializers.ModelSerializer):
+    class Meta:
+        model = Format
+        fields = "__all__"
+
 class SupplierSerializer(serializers.ModelSerializer):
-    storage_products = serializers.SerializerMethodField()
+    # storage_products = serializers.SerializerMethodField()
     class Meta:
         model = Supplier
-        fields = ["id",'supplier_type', 'name', 'phone', 'added', 'desc', 'storage_products']
+        fields = "__all__"
 
-    def get_storage_products(self, obj):
-        # Retrieve all related StorageProduct instances for the Supplier
-        storage_products = StorageProduct.objects.filter(storage__supplier=obj)
-        # Serialize the queryset
-        serializer = StorageProductSerializer(instance=storage_products, many=True)
-        return serializer.data
+    # def get_storage_products(self, obj):
+    #     # Retrieve all related StorageProduct instances for the Supplier
+    #     storage_products = StorageProduct.objects.filter(storage__supplier=obj)
+    #     # Serialize the queryset
+    #     serializer = StorageProductSerializer(instance=storage_products, many=True)
+    #     return serializer.data
 
-    def to_representation(self, instance):
-        representation = super().to_representation(instance)
-        # Include related Storage information within the representation
-        storages = Storage.objects.filter(supplier=instance)
-        storage_data = StorageSerializer(storages, many=True).data
-        representation['storages'] = storage_data
-        return representation
+    # def to_representation(self, instance):
+    #     representation = super().to_representation(instance)
+    #     # Include related Storage information within the representation
+    #     storages = Storage.objects.filter(supplier=instance)
+    #     storage_data = StorageSerializer(storages, many=True).data
+    #     representation['storages'] = storage_data
+    #     return representation
+    
+    
