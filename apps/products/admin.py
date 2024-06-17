@@ -26,5 +26,10 @@ class StorageProductAdmin(admin.ModelAdmin):
     get_product_name.admin_order_field = 'product__name'
 
 
+@admin.register(Storage)
+class StorageAdmin(admin.ModelAdmin):
+    list_display = ('id','name',)
+
+
 
 

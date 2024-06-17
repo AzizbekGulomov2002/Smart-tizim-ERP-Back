@@ -125,54 +125,73 @@ class TradeApiView(APIView):
 
     def get(self, request):
         company_id = request.user.company_id
-        delete_storage = StorageProduct.objects.filter(company_id=company_id, storage_count=0)
-        if delete_storage.exists():
-            delete_storage.delete()
-        product = Product.objects.select_related('format', 'category').filter(company_id=company_id).prefetch_related(
-            'storage_products').filter(storage_products__storage_count__gte=1).distinct()
-        category = Category.objects.filter(company_id=company_id)
-        client = Client.objects.filter(company_id=company_id)
-        service = ServiceType.objects.filter(company_id=company_id)
-        category = CategorySerializer(category, many=True)
-        client = ClientSerializer(client, many=True)
-        product = ProductSerializer(product, many=True)
-        service_serializers = ServiceTypeSerializer(service, many=True)
-        return Response({"client": client.data, "category": category.data, "product": product.data,
-                         'service': service_serializers.data, "company_id": company_id})
+
+        # Delete storage products with zero count
+        StorageProduct.objects.filter(company_id=company_id, storage_count=0).delete()
+
+        # Fetch categories, clients, services, and products with available stock for the company
+        categories = Category.objects.filter(company_id=company_id)
+        clients = Client.objects.filter(company_id=company_id)
+        services = ServiceType.objects.filter(company_id=company_id)
+        products = Product.objects.select_related('format', 'category') \
+            .filter(company_id=company_id) \
+            .prefetch_related('storage_products') \
+            .filter(storage_products__storage_count__gte=1) \
+            .distinct()
+
+        # Serialize data
+        category_serializer = CategorySerializer(categories, many=True)
+        client_serializer = ClientSerializer(clients, many=True)
+        service_serializer = ServiceTypeSerializer(services, many=True)
+        product_serializer = ProductSerializer(products, many=True)
+
+        return Response({
+            "client": client_serializer.data,
+            "category": category_serializer.data,
+            "product": product_serializer.data,
+            'service': service_serializer.data,
+            "company_id": company_id
+        })
 
     @is_trade_permission
     def post(self, request):
         company_id = request.user.company_id
+
         try:
-            data = request.data[0]
-            client_id = data.pop('id')
-            if client_id:
-                try:
-                    client = Client.objects.get(id=int(client_id))
-                except Client.DoesNotExist:
-                    return Response({"status": "error", "message": "Client not found"},
-                                    status=status.HTTP_404_NOT_FOUND)
-            products = data.pop('product')
+            data = request.data
+            client_id = data.get('client_id')
+            trade_type = data.get('trade_type')
+            total_price = data.get('total_price')
+            discount_summa = data.get('discount_summa', 0)
+            service_id = data.get("service_id")
+            service_price = data.get("service_price")
+            products = data.get('products', [])
 
-            text = ''
-            # text - desc ichida Tradening ma'lumotlari saqlanadigan field
-            # print(text)
-            for product in products:
-                name = product['name']
-                price = product['price']
-                count = product['count']
-                text += f'product {name} count {count}  *   {price} =  {count * price} \n '
-                storage_product_id = product['storage_products']
-                updated_count = StorageProduct.objects.get(id=storage_product_id)
-                updated_count.storage_count -= count
-                updated_count.save()
+            if not client_id:
+                return Response({"status": "error", "message": "Client ID is required"},
+                                status=status.HTTP_400_BAD_REQUEST)
 
-            n = data.pop('n')
-            trade_type = data.pop('trade_type')
-            total_price = data.pop('total_price')
-            discount_summa = data.pop('discount_summa')
-            # chegirma = data.pop('chegirma')
+            client = Client.objects.get(id=client_id, company_id=company_id)
 
+            # Validate products and update storage counts
+            description_text = ''
+            for product_data in products:
+                storage_product_id = product_data['storage_product_id']
+                count = product_data['count']
+
+                # Fetch and update storage product
+                storage_product = StorageProduct.objects.get(id=storage_product_id, company_id=company_id)
+                if storage_product.storage_count < count:
+                    return Response({"status": "error", "message": f"Insufficient stock for product {storage_product.product.name}"},
+                                    status=status.HTTP_400_BAD_REQUEST)
+
+                storage_product.storage_count -= count
+                storage_product.save()
+
+                # Build description text for the trade
+                description_text += f'Product {storage_product.product.name}: {count} * {storage_product.price} = {count * storage_product.price}\n'
+
+            # Create Trade record
             trade = Trade.objects.create(
                 company_id=company_id,
                 client=client,
@@ -180,52 +199,53 @@ class TradeApiView(APIView):
                 trade_type=trade_type,
                 trade_date=datetime.now(),
                 discount_summa=discount_summa,
-                desc=text
+                desc=description_text
             )
-            transaction = Transaction.objects.get(company_id=company_id, action_type='kirim', name='savdo')
-            if trade.trade_type == 'Naqtga':
-                payment = Payments.objects.create(
-                    company_id=company_id,
-                    transaction=transaction,
-                    user=request.user,
-                    # trade=trade,
-                    client=client,
-                    cash=int(total_price),
-                    added=datetime.now(),
-                )
-            elif trade.trade_type == 'Qarzga':
-                payment = Payments.objects.create(
-                    payment=Payments.objects.create(
-                        company_id=company_id,
-                        transaction=transaction,
-                        user=request.user,
-                        client=client,
-                        cash=int(total_price),
-                        added=datetime.now(),
-                        deadline=deadline,
-                    )
-                )
-                print(111)
-            else:  # yarim naq
-                print(111)
 
-            id = data.pop("service_id")
-            service_price = data.pop("service_price")
-            if id is not None:
-                service_type = ServiceType.objects.get(company_id=company_id, id=id)
-                a = Addition_service.objects.create(
+            # Fetch the transaction type
+            transaction = Transaction.objects.get(company_id=company_id, action_type='kirim', name='savdo')
+
+            # Create Payment record
+            payment = Payments.objects.create(
+                company_id=company_id,
+                transaction=transaction,
+                user=request.user,
+                trade=trade,
+                client=client,
+                cash=int(total_price),
+                added=datetime.now(),
+            )
+
+            # Optionally create additional service
+            if service_id is not None:
+                service_type = ServiceType.objects.get(company_id=company_id, id=service_id)
+                Addition_service.objects.create(
                     company_id=company_id,
                     trade=trade,
                     service_type=service_type,
                     service_price=service_price,
-                    # service_date=datetime.now()
+                    desc=data.get("service_desc", "")
                 )
-            # AdditionServiceSerializer(a,many=False)
-            serializers = PaymentsSerializer(payment)
 
-            return Response({"payment": serializers.data})
-        except:
-            return Response({"status": "error", })
+            payment_serializer = PaymentsSerializer(payment)
+            return Response({"payment": payment_serializer.data}, status=status.HTTP_201_CREATED)
+
+        except Client.DoesNotExist:
+            return Response({"status": "error", "message": "Client not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        except StorageProduct.DoesNotExist:
+            return Response({"status": "error", "message": "Storage product not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        except Transaction.DoesNotExist:
+            return Response({"status": "error", "message": "Transaction type 'kirim - savdo' not found"},
+                            status=status.HTTP_404_NOT_FOUND)
+
+        except ServiceType.DoesNotExist:
+            return Response({"status": "error", "message": "Service type not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        except Exception as e:
+            return Response({"status": "error", "message": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
 
 
 
@@ -276,10 +296,11 @@ class AdditionServiceViewSet(viewsets.ModelViewSet):
         company_id = self.request.user.company_id
         queryset = Addition_service.objects.filter(company_id=company_id)
         return queryset
+
     def list(self, request, *args, **kwargs):
         queryset = self.get_queryset()
         serializer = self.get_serializer(queryset, many=True)
-        return serializer(serializer.data)
+        return Response(serializer.data)
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_object()
         serializer = self.get_serializer(instance)

@@ -8,8 +8,8 @@ router = DefaultRouter()
 router.register(r'clients', ClientViewSet, basename='clients')
 
 # router.register(r'trade-details', TradeDetailViewSet)
-router.register(r'service-types', ServiceTypeViewSet, basename='service-types')
-router.register(r'addition-services', AdditionServiceViewSet, basename='addition-services')
+router.register(r'service_types', ServiceTypeViewSet, basename='service-types')
+router.register(r'addition_services', AdditionServiceViewSet, basename='addition-services')
 
 urlpatterns = [
     path('trades/', TradeApiView.as_view(), name='trades'), 
