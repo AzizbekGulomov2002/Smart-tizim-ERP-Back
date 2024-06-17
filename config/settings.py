@@ -61,23 +61,23 @@ INTERNAL_IPS = [
     "127.0.0.1",
 ]
 
-LOGGING = {
-    'version':1,
-    'handlers':{
-         'file': {
-            'level': 'DEBUG',
-            'class': 'logging.FileHandler',
-            'filename': 'debug.log'
-        },
-        'console':{'class':'logging.StreamHandler'}
-    },
-    'loggers':{
-        'django.db.backends':{
-            'handlers':['file'],
-            'level':'DEBUG'
-                    }
-               }
-}   #  mobodo debug tulbar ishlamasa
+# LOGGING = {
+#     'version':1,
+#     'handlers':{
+#          'file': {
+#             'level': 'DEBUG',
+#             'class': 'logging.FileHandler',
+#             'filename': 'debug.log'
+#         },
+#         'console':{'class':'logging.StreamHandler'}
+#     },
+#     'loggers':{
+#         'django.db.backends':{
+#             'handlers':['file'],
+#             'level':'DEBUG'
+#                     }
+#                }
+# }   #  mobodo debug tulbar ishlamasa
 
 
 MIDDLEWARE = [
@@ -126,9 +126,9 @@ DATABASES = {
 
 
 REST_FRAMEWORK = {
-    'DEFAULT_RENDERER_CLASSES': (
-        'rest_framework.renderers.JSONRenderer',
-    ),
+    # 'DEFAULT_RENDERER_CLASSES': (
+    #     'rest_framework.renderers.JSONRenderer',
+    # ),
      'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.AllowAny',
     ],

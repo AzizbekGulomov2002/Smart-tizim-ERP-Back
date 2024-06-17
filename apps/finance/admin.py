@@ -16,9 +16,9 @@ from apps.finance.models import Transaction, Payments, FinanceOutcome
 #     list_display = ('trade', 'transaction', 'cash', 'card', 'other_pay', 'dedline', 'added', 'check_id', 'total')
 
 class FinanceOutcomeAdmin(admin.ModelAdmin):
-    list_display = ('name', 'user', 'tranzaction_type', 'client', 'storage', 'cash', 'card', 'other_pay', 'total', 'date')
-    list_filter = ('tranzaction_type', 'client','storage', 'date')
-    search_fields = ['name', 'client__name',  'storage__name']
+    list_display = ("id",'name', 'user', 'tranzaction_type', 'client', 'supplier', 'cash', 'card', 'other_pay', 'total', 'date')
+    list_filter = ('tranzaction_type', 'client','supplier', 'date')
+    search_fields = ['name', 'client__name',  'supplier__name']
     date_hierarchy = 'date'
 
 admin.site.register(FinanceOutcome, FinanceOutcomeAdmin,)

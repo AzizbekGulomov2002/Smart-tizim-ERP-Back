@@ -5,49 +5,26 @@ from .models import *
 class CategoryAdmin(admin.ModelAdmin):
     list_display = ('name',)
 
-# @admin.register(Format)
-# class FormatAdmin(admin.ModelAdmin):
-#     list_display = ('name',)
 
-# @admin.register(Product)
-# class ProductAdmin(admin.ModelAdmin):
-#     list_display = ('name', 'storage_type', 'category', 'format', 'price', 'total_storage_count','current_storage_count')
-
-
-# class ProductAdmin(ImportExportModelAdmin):
-#     # resource_class = ProductResource
-#     list_display = ['name', 'storage_type', 'category', 'format', 'price', 'bar_code']
-#     search_fields = ['name', 'bar_code']
-#     list_filter = ['storage_type', 'category', 'format']
-#     list_editable = ['storage_type', 'category', 'format', 'price', 'bar_code']
-#     list_per_page = 10
-
-    # Optional: Customize form fields for foreign keys to show as dropdowns
-    # def get_form(self, request, obj=None, **kwargs):
-    #     form = super().get_form(request, obj, **kwargs)
-    #     form.base_fields['category'].queryset = Category.objects.filter(company_id=request.user.company_id)
-    #     form.base_fields['format'].queryset = Format.objects.filter(company_id=request.user.company_id)
-    #     return form
-
-admin.site.register(Product)
 admin.site.register(Supplier)
 admin.site.register(Format)
-admin.site.register(StorageProduct)
 
-# @admin.register(Supplier)
-# class SupplierAdmin(admin.ModelAdmin):
-#     list_display = ('name', 'supplier_type', 'phone', 'added', 'desc')
+@admin.register(Product)
+class ProductAdmin(admin.ModelAdmin):
+    list_display = ('id', 'name', 'price', 'product_type')
 
-# @admin.register(StorageProduct)
-# class StorageProductAdmin(admin.ModelAdmin):
-#     list_display = ('storage', 'product',  'price','total_summa','quantity')
-# class StorageProductInline(admin.TabularInline):
-#     model = StorageProduct
-#     extra = 1
+@admin.register(StorageProduct)
+class StorageProductAdmin(admin.ModelAdmin):
+    list_display = ('id', 'get_product_name', 'date', 'storage_count','total_summa',"storage_type","size_type")
+    list_filter = ('date',)
+    search_fields = ('product__name',)
+    ordering = ('-date',)
 
-# @admin.register(Storage)
-# class StorageAdmin(admin.ModelAdmin):
-#     list_display = ('user', 'storage_type', 'action_type', 'supplier', 'storage_date', 'desc')
-#     inlines = [StorageProductInline]
+    def get_product_name(self, obj):
+        return obj.product.name
+    get_product_name.short_description = 'Product Name'
+    get_product_name.admin_order_field = 'product__name'
+
+
 
 

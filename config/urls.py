@@ -33,7 +33,7 @@ schema_view = get_schema_view(
 from apps.products.views import StorageProductCreate
 urlpatterns = [
 
-    path('',StorageProductCreate.as_view()),
+
     path('company_off/',company_off_view),
     path('company_on/',company_on_view),
 

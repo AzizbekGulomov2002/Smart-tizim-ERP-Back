@@ -1,8 +1,6 @@
-from django.shortcuts import render
 from rest_framework import viewsets, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-
 from .filters import TransactionFilter
 from .models import Transaction, Payments, FinanceOutcome
 from .serializers import TransactionSerializer, PaymentsSerializer, FinanceOutcomeSerializer

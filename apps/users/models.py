@@ -6,22 +6,22 @@ from django.contrib.auth.models import AbstractUser
 
 class Company(models.Model):
     TARIFF = (
-        ('Basic', 'Basic'),
+        ('BASIC', 'Basic'),
         ('STANDART', 'Standart'),
         ('BEST', 'Best'),
     )
     comp_name = models.CharField(max_length=500)
+    full_name = models.CharField(max_length=500) # noqa
     phone = models.IntegerField(unique=True)
     email = models.EmailField(null=True,unique=True, blank=True)
     is_active = models.BooleanField(default=True)
     created = models.DateField() 
 
-    # active_days = models.IntegerField(default=7, null=True, blank=True)
     active_days = models.DateField()
     # end_date = models.DateField(null=True,blank=True)
     # sum = models.IntegerField(default=0)
     tariff = models.CharField(max_length=20, choices=TARIFF, default="Best")
-    currenty_type = models.CharField(max_length=200, help_text="Valyuta turini bering: So'm, Rubl, Dollar ...")
+    currency_type = models.CharField(max_length=200, help_text="Valyuta turini bering: So'm, Rubl, Dollar ...")
 
     # @property
     # def status(self):
@@ -40,11 +40,8 @@ class Company(models.Model):
 class User(AbstractUser):
     company_id = models.BigIntegerField(default=0)
     class Role(models.TextChoices):
-        # COMPANY = "COMPANY" , "company"
         DIRECTOR = "DIRECTOR", "director"
         MANAGER = "MANAGER", "manager"
-        # KASSA  = 'KASSA' ,'kassa'
-        # STORAGE = 'STORAGE' ,'storage'
 
     is_user_create = models.BooleanField(default=False)
     is_trade = models.BooleanField(default=False)
@@ -68,7 +65,6 @@ class User(AbstractUser):
 
 
 class CompanyPayments(models.Model):
-    # company = models.ForeignKey(Company, on_delete=models.CASCADE)
     company_id = models.BigIntegerField(default=0)
     sum = models.FloatField()
     date = models.DateTimeField()

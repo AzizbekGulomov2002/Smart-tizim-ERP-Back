@@ -1,21 +1,15 @@
-from django.contrib.auth.models import User
 from django.db import models
 from django.db.models import Sum
 from django.conf import settings
 from datetime import datetime
-from datetime import timedelta
 from apps.app.models import BaseModel
 
 # Create your models here.
 class Category(BaseModel):
-    # company_id = models.BigIntegerField(default=0)
-    # name = models.CharField(max_length=100)
     def __str__(self):
         return self.name
 
 class Format(BaseModel):
-    # company_id = models.BigIntegerField(default=0)
-    # name = models.CharField(max_length=100)
     def __str__(self):
         return self.name
 
@@ -26,18 +20,15 @@ class DelateManager(models.Manager):
 
 
 class Product(BaseModel):
-    STORAGE_TYPES = [
+    PRODUCT_TYPE = [
         ('Sanaladigan', 'Sanaladigan'),
         ('Sanalmaydigan', 'Sanalmaydigan')
     ]
-    # company_id = models.BigIntegerField(default=0)
-    # name = models.CharField(max_length=100)
-    storage_type = models.CharField(max_length=20, choices=STORAGE_TYPES , default='Sanaladigan')
+    product_type = models.CharField(max_length=20, choices=PRODUCT_TYPE , default='Sanaladigan')
     category = models.ForeignKey(Category, on_delete=models.CASCADE)
     format = models.ForeignKey(Format, on_delete=models.CASCADE)
     price = models.PositiveIntegerField()
     bar_code = models.TextField(blank=True, null=True)
-
 
     deleted = models.DateField(null=True, blank=True)
     objects = DelateManager()
@@ -49,7 +40,7 @@ class Product(BaseModel):
         self.deleted = None
         self.save()
     def __str__(self):
-        return self.name
+        return f"{self.name} | {self.id}"
 
 
     @property
@@ -76,21 +67,26 @@ class Supplier(BaseModel):
         ('Tezkor', 'Tezkor'),
         ('Doimiy', 'Doimiy'),
     )
-    # company_id = models.BigIntegerField(default=0)
     supplier_type = models.CharField(max_length=20, choices=SUPPLIER_TYPE, default="Tezkor")
-    # name = models.CharField(max_length=400, null=True, blank=True)
     phone = models.CharField(max_length=11, null=True, blank=True)
     added = models.DateTimeField()
     desc = models.TextField(blank=True, null=True)
+
+    # @property
+    # def status:
+    #     if total>0:
+    #         return "Qarzdorlik"
+    #     else:
+    #         return "Aktiv"
     def __str__(self):
         return self.name
 
 
 class Storage(BaseModel):
-    # company_id = models.BigIntegerField(default=0)
-    # name = models.CharField(max_length=300)
     def __str__(self):
         return self.name
+
+
 
 
 class StorageProduct(models.Model):
@@ -103,38 +99,49 @@ class StorageProduct(models.Model):
         ('Naqtga', 'Naqtga'),
         ('Qarzga', 'Qarzga'),
     )
+
     company_id = models.BigIntegerField(default=0)
+    storage_type = models.CharField(max_length=20, choices=STORAGE_TYPE, default="Naqtga")
     size_type = models.CharField(max_length=20, choices=SIZE_TYPE, default="O'lchovsiz")
-    # storage = models.ForeignKey(Storage, on_delete=models.CASCADE)
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="storage_products")
-    storage_count = models.PositiveIntegerField(default=0)
-    price = models.PositiveIntegerField(null=True, blank=True)
-    date = models.DateTimeField(null=True,blank=True) # noqa
 
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True) # StorageProductga
-    storage_type = models.CharField(max_length=20, choices=STORAGE_TYPE, default="Naqtga") # StorageProductga
-    supplier = models.ForeignKey(Supplier, on_delete=models.CASCADE, null=True, blank=True, related_name='storages') # StorageProductga
+    storage_count = models.FloatField(default=1)
+    part_size = models.FloatField(null=True, blank=True, default=1)  # Set a default value
+    height = models.FloatField(null=True, blank=True, default=1)  # Set a default value
+    width = models.FloatField(null=True, blank=True, default=1)  # Set a default value
+    price = models.FloatField(default=1)
 
-    remind_count = models.FloatField(help_text='Eslatish miqdori ...',default=0) # StorageProductga
-    expiration = models.DateField(help_text='Yaroqlilik muddati ...',null=True,blank=True) # StorageProductga
-    total_summa = models.PositiveIntegerField(default=0 ,null=True,blank=True)
+    date = models.DateTimeField(null=True, blank=True)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True)
+    supplier = models.ForeignKey(Supplier, on_delete=models.CASCADE, null=True, blank=True, related_name='storages')
+
+    remind_count = models.FloatField(help_text='Eslatish miqdori ...', default=0)
+    expiration = models.DateField(help_text='Yaroqlilik muddati ...', null=True, blank=True)
+    # total_summa = models.FloatField(default=0)
 
     deleted = models.DateField(null=True, blank=True)
     objects = DelateManager()
     all_objects = models.Manager()
+
+    @property
+    def total_summa(self):
+        if self.size_type == "O'lchovsiz":
+            return self.storage_count * self.price
+        elif self.size_type == "O'lchovli":
+            return self.storage_count * self.part_size * self.price
+        elif self.size_type == "Formatli":
+            return self.storage_count * self.width * self.height * self.price
+        else:
+            return 0
+
+
     def delete(self):
         self.deleted = datetime.now().date()
         self.save()
+
     def __str__(self):
         return self.product.name
 
 
-# class CompanyId(models.Model):
-#     company_id = models.BigIntegerField(default=0)
 
-# # Create your models here.
-# class Category(CompanyId):
-#     name = models.CharField(max_length=100)
-#     def str(self):
-#         return self.name
 

@@ -10,13 +10,9 @@ from apps.finance.models import Payments
 class AdditionServiceInline(admin.TabularInline):
     model = Addition_service
 
-class PaymentsInline(admin.TabularInline):
-    model = Payments
 class TradeAdmin(admin.ModelAdmin):
     inlines = [
-
         AdditionServiceInline,
-        PaymentsInline,
     ]
     list_display = ('id', 'client', 'trade_date', 'trade_type', 'check_id')
     list_filter = ('trade_type', 'client')
@@ -32,10 +28,9 @@ class ClientAdmin(admin.ModelAdmin):
     date_hierarchy = 'added'
 
 class AdditionServiceAdmin(admin.ModelAdmin):
-    list_display = ('trade', 'service_type', 'service_price', 'service_date', 'desc')
-    list_filter = ('trade__client', 'service_type', 'service_date')
+    list_display = ('trade', 'service_type', 'service_price', 'desc')
+    list_filter = ('trade__client', 'service_type')
     search_fields = ['trade__client__name', 'service_type__name', 'desc']
-    date_hierarchy = 'service_date'
 
 class ServiceTypeAdmin(admin.ModelAdmin):
     list_display = ('name',)

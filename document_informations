@@ -1,0 +1,19 @@
+
+
+___________________________________________
+1) Tariffs: Basic / Premium / Best
+Basic: user_count: 2(Director,Manager) / client_count: 10 / storage_count: 1 / statistics: No (99.000)
+Premium: user_count: 10(1-Director,9-Manager) / client_count: 50 / storage_count: 5 / statistics: Yes (199.000)
+Best: user_count: unlimited / client_count: unlimited / storage_count: unlimited / statistics: Yes (299.000)
+
+___________________________________________
+2) Statistics: (Trade [count, total] , Payments[income, outcome, cash/card/other], Clients [count,total_sum]
+Product[name,trade_date,total], Addition_service[dates,total], User_workers[dates, total])
+
+___________________________________________
+
+3) UserPermissions:
+Manager -> Storage[CRUD], Client[CRUD], Finance[CRUD], Statistics[Read]
+
+___________________________________________
+4)

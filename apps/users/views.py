@@ -46,23 +46,27 @@ class CreateCompanyUserAPIView(APIView):
 
 class UserCreateAPIView(APIView):
     permission_classes =[IsAuthenticated]
+
     @is_user_permission
     def post(self, request):
         password = request.data.pop('password', None)
         if password:
             request.data['company_id'] = request.user.company_id
             request.data['password'] = make_password(password)
+
         company = Company.objects.get(id=request.user.company_id)
         user_count = User.objects.filter(company_id=request.user.company_id).count()
-        if (company.tariff == "BASIC" and user_count < 1) or \
-           (company.tariff == "PREMIUM" and user_count < 100) or \
-           (company.tariff == "BEST"):
+
+        if (company.tariff == "BASIC" and user_count < 2) or \
+                (company.tariff == "STANDART" and user_count < 100) or \
+                (company.tariff == "BEST"):
             serializer = UserSerializer(data=request.data)
             if serializer.is_valid():
                 serializer.save()
                 return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response({"error": "User limit reached for your tariff plan."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+        return Response({"error": "User limit reached for your tariff plan."}, status=status.HTTP_400_BAD_REQUEST)
 
 class LoginApiView(APIView):
     permission_classes = [AllowAny]

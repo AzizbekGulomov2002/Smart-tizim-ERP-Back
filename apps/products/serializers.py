@@ -12,13 +12,14 @@ class CategorySerializer(serializers.ModelSerializer):
 class StorageProductSerializer(serializers.ModelSerializer):
     class Meta:
         model = StorageProduct
-        fields = ["id","count"]
+        # fields = ["id","storage_count"]
+        fields = "__all__"
 
 class ProductSerializer(serializers.ModelSerializer):
     # storage_products = StorageProductSerializer(many=True)
     class Meta:
         model = Product
-        fields = ['id','name','storage_type', "category",'price','format','bar_code', 'storage_products'] # <  qoganlari ozgarsaham  storage_products   shu ozgarmasin
+        fields = ['id','name','product_type', "category",'price','format','bar_code', 'storage_products'] # <  qoganlari ozgarsaham  storage_products   shu ozgarmasin
         depth = 1
 
 
