@@ -18,8 +18,8 @@ class CreateCompanyUserAPIView(APIView):
         user_serializer = UserSerializer(data=request.data.get('user'))
         if user_serializer.is_valid():
             if company_serializer.is_valid():
-                # company_instance = company_serializer.save()
-                company_instance = company_serializer.save(finish=datetime.now().date() + timedelta(days=15))  # finish = datetime.now().date() + timedelta(days=15)
+                company_instance = company_serializer.save()
+                # company_instance = company_serializer.save(finish=datetime.now().date() + timedelta(days=15))  # finish = datetime.now().date() + timedelta(days=15)
                 user_instance = user_serializer.save(
                                                     company_id=company_instance.id,
                                                     is_user_create=True,
