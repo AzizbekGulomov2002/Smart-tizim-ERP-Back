@@ -28,7 +28,7 @@ class TransactionViewSet(viewsets.ModelViewSet):
         if serializer.is_valid():
             serializer.save(company_id=request.user.company_id)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return Response(serializer.errors, status=status.HTTP_404_NOT_FOUND)
 
     def update(self, request, *args, **kwargs):
         instance = self.get_object()
@@ -37,7 +37,6 @@ class TransactionViewSet(viewsets.ModelViewSet):
             serializer.save()
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
         instance.delete()

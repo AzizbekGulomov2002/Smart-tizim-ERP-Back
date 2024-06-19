@@ -73,7 +73,8 @@ class ClientViewSet(CustomPaginationMixin, viewsets.ModelViewSet):
     serializer_class = ClientSerializer
     def get_queryset(self):
         company_id = self.request.user.company_id
-        queryset = Client.objects.filter(company_id=company_id).order_by('-id')
+        queryset = Client.objects.filter(company_id=company_id)
+        # queryset = Client.objects.filter(company_id=company_id)
         return queryset
     def list(self, request, *args, **kwargs):
         queryset = self.get_queryset()
@@ -85,24 +86,34 @@ class ClientViewSet(CustomPaginationMixin, viewsets.ModelViewSet):
         serializer = self.get_serializer(instance)
         return Response(serializer.data)
 
-    @is_client_permission  # Apply your custom permission decorator
-    def post(self, request, *args, **kwargs):
-        if hasattr(request.user, 'company'):
-            company = request.user.company
-            client_count = Client.objects.filter(company_id=company.id).count()
+    # @is_client_permission  # Apply your custom permission decorator
+    # def create(self, request, *args, **kwargs):
+    #     if hasattr(request.user, 'company'):
+    #         company = request.user.company
+    #         client_count = Client.objects.filter(company_id=company.id).count()
+    #
+    #         if (company.tariff == "BASIC" and client_count >= 10) or \
+    #                 (company.tariff == "PREMIUM" and client_count >= 50):
+    #             return Response({"error": "Client limit reached for your tariff plan."},
+    #                             status=status.HTTP_403_FORBIDDEN)
+    #
+    #         serializer = self.get_serializer(data=request.data)
+    #         if serializer.is_valid():
+    #             # serializer.save(company_id=company.id)
+    #             serializer.save(company_id=request.user.company_id)
+    #             print(self.request.user.company_id)
+    #             return Response(serializer.data, status=status.HTTP_201_CREATED)
+    #         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    #     else:
+    #         return Response({"error": "User does not have company information."}, status=status.HTTP_400_BAD_REQUEST)
 
-            if (company.tariff == "BASIC" and client_count >= 10) or \
-                    (company.tariff == "PREMIUM" and client_count >= 50):
-                return Response({"error": "Client limit reached for your tariff plan."},
-                                status=status.HTTP_403_FORBIDDEN)
-
-            serializer = self.get_serializer(data=request.data)
-            if serializer.is_valid():
-                serializer.save(company_id=company.id)
-                return Response(serializer.data, status=status.HTTP_201_CREATED)
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        else:
-            return Response({"error": "User does not have company information."}, status=status.HTTP_400_BAD_REQUEST)
+    @is_client_permission
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save(company_id=request.user.company_id)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
     @is_client_permission

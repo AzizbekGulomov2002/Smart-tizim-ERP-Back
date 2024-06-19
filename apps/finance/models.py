@@ -1,11 +1,10 @@
 from django.db import models
 from django.conf import settings
 from apps.app.models import BaseModel
-from apps.products.models import Storage, Supplier
-from apps.trade.models import Trade, Client
+from apps.products.models import Supplier
+from apps.trade.models import Client
 
 
-# Create your models here.
 class Transaction(BaseModel):
     ACTION_TYPE = (
         ('kirim', "kirim"),
