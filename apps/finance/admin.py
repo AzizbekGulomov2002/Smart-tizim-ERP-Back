@@ -7,9 +7,9 @@ from apps.finance.models import Transaction, Payments, FinanceOutcome
 
 
 
-# @admin.register(Transaction)
-# class TransactionAdmin(admin.ModelAdmin):
-#     list_display = ('name', 'action_type', 'transaction_type')
+@admin.register(Transaction)
+class TransactionAdmin(admin.ModelAdmin):
+    list_display = ('id','name', 'action_type', 'transaction_type')
 
 # @admin.register(Payments)
 # class PaymentsAdmin(admin.ModelAdmin):
@@ -21,6 +21,10 @@ class FinanceOutcomeAdmin(admin.ModelAdmin):
     search_fields = ['name', 'client__name',  'supplier__name']
     date_hierarchy = 'date'
 
+
+class PaymentsAdmin(admin.ModelAdmin):
+    list_display = ("id",'client','cash','card','other_pay', 'total')
+
 admin.site.register(FinanceOutcome, FinanceOutcomeAdmin,)
-admin.site.register(Payments)
-admin.site.register(Transaction)
+admin.site.register(Payments, PaymentsAdmin)
+# admin.site.register(Transaction)

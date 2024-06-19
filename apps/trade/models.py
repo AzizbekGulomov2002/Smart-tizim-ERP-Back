@@ -81,9 +81,9 @@ class ServiceType(BaseModel):
 # Addition service class
 class Addition_service(models.Model):
     company_id = models.BigIntegerField(default=0)
-    trade = models.ForeignKey(Trade, on_delete=models.CASCADE, related_name='addition_service')
+    # trade = models.ForeignKey(Trade, on_delete=models.CASCADE, related_name='addition_service')
     service_type = models.ForeignKey(ServiceType, on_delete=models.CASCADE,related_name='addition_service')
-    service_price = models.PositiveBigIntegerField()
+    service_price = models.FloatField()
     # service_date = models.DateTimeField(null=True, blank=True) # noqa
     desc = models.TextField(null=True, blank=True)
 

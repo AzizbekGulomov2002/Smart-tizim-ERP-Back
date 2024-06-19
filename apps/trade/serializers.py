@@ -11,7 +11,7 @@ class ServiceTypeSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 class AdditionServiceSerializer(serializers.ModelSerializer):
-    service_type = ServiceTypeSerializer()
+    # service_type = ServiceTypeSerializer()
     class Meta:
         model = Addition_service
         fields = "__all__"
@@ -28,11 +28,6 @@ class ClientSerializer(serializers.ModelSerializer):
 
 
 class TradeSerializer(serializers.ModelSerializer):
-    # payments = serializers.SerializerMethodField()
-    # def get_payments(self, obj):
-    #     # Retrieve payments associated with either the trade or the client
-    #     payments = Payments.objects.filter(Q(trade=obj) | Q(client=obj.client))
-    #     return PaymentsSerializer(payments, many=True).data
     class Meta:
         model = Trade
         fields = "__all__"

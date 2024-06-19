@@ -355,7 +355,6 @@ def parse_date(date_str = None):
 
 class StorageProductCreate(APIView):
     permission_classes = [IsAuthenticated]
-
     def get(self, request):
         company_id = request.user.company_id
         product = Product.objects.select_related('format', 'category').prefetch_related('storage_products').filter(

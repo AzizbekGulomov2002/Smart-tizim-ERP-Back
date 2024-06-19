@@ -1,4 +1,6 @@
 from datetime import datetime, timedelta
+
+from django.db.models import Sum, F
 from rest_framework import viewsets, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -13,6 +15,8 @@ from ..products.serializers import CategorySerializer, ProductSerializer
 from .decorator import is_client_permission, is_trade_permission
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
+
+from ..users.models import Company
 
 
 # Pagination class
@@ -86,32 +90,23 @@ class ClientViewSet(CustomPaginationMixin, viewsets.ModelViewSet):
         serializer = self.get_serializer(instance)
         return Response(serializer.data)
 
-    # @is_client_permission  # Apply your custom permission decorator
-    # def create(self, request, *args, **kwargs):
-    #     if hasattr(request.user, 'company'):
-    #         company = request.user.company
-    #         client_count = Client.objects.filter(company_id=company.id).count()
-    #
-    #         if (company.tariff == "BASIC" and client_count >= 10) or \
-    #                 (company.tariff == "PREMIUM" and client_count >= 50):
-    #             return Response({"error": "Client limit reached for your tariff plan."},
-    #                             status=status.HTTP_403_FORBIDDEN)
-    #
-    #         serializer = self.get_serializer(data=request.data)
-    #         if serializer.is_valid():
-    #             # serializer.save(company_id=company.id)
-    #             serializer.save(company_id=request.user.company_id)
-    #             print(self.request.user.company_id)
-    #             return Response(serializer.data, status=status.HTTP_201_CREATED)
-    #         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    #     else:
-    #         return Response({"error": "User does not have company information."}, status=status.HTTP_400_BAD_REQUEST)
-
-    @is_client_permission
+    @is_client_permission  # Apply your custom permission decorator
     def create(self, request, *args, **kwargs):
+        company_id = request.user.company_id
+        company = Company.objects.filter(id=company_id).first()
+        if not company:
+            return Response({"error": "User does not have company information."},
+                            status=status.HTTP_400_BAD_REQUEST)
+        client_count = Client.objects.filter(company_id=company.id).count()
+        if (company.tariff == "BASIC" and client_count >= 10) or \
+                (company.tariff == "PREMIUM" and client_count >= 50):
+            return Response({"error": "Client limit reached for your tariff plan."},
+                            status=status.HTTP_403_FORBIDDEN)
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():
+            # serializer.save(company_id=company.id)
             serializer.save(company_id=request.user.company_id)
+            print(self.request.user.company_id)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -136,10 +131,8 @@ class TradeApiView(APIView):
 
     def get(self, request):
         company_id = request.user.company_id
-
         # Delete storage products with zero count
         StorageProduct.objects.filter(company_id=company_id, storage_count=0).delete()
-
         # Fetch categories, clients, services, and products with available stock for the company
         categories = Category.objects.filter(company_id=company_id)
         clients = Client.objects.filter(company_id=company_id)
@@ -149,6 +142,12 @@ class TradeApiView(APIView):
             .prefetch_related('storage_products') \
             .filter(storage_products__storage_count__gte=1) \
             .distinct()
+
+        total_sum = StorageProduct.objects.filter(
+            company_id=company_id, storage_count__gte=1
+        ).aggregate(
+            total_sum=Sum(F('storage_count') * F('price'))
+        )['total_sum'] or 0
 
         # Serialize data
         category_serializer = CategorySerializer(categories, many=True)
@@ -161,7 +160,8 @@ class TradeApiView(APIView):
             "category": category_serializer.data,
             "product": product_serializer.data,
             'service': service_serializer.data,
-            "company_id": company_id
+            "company_id": company_id,
+            "total_sum": total_sum
         })
 
     @is_trade_permission
@@ -174,8 +174,9 @@ class TradeApiView(APIView):
             trade_type = data.get('trade_type')
             total_price = data.get('total_price')
             discount_summa = data.get('discount_summa', 0)
+
             service_id = data.get("service_id")
-            service_price = data.get("service_price")
+            # service_price = data.get("service_price")
             products = data.get('products', [])
 
             if not client_id:
@@ -195,10 +196,8 @@ class TradeApiView(APIView):
                 if storage_product.storage_count < count:
                     return Response({"status": "error", "message": f"Insufficient stock for product {storage_product.product.name}"},
                                     status=status.HTTP_400_BAD_REQUEST)
-
                 storage_product.storage_count -= count
                 storage_product.save()
-
                 # Build description text for the trade
                 description_text += f'Product {storage_product.product.name}: {count} * {storage_product.price} = {count * storage_product.price}\n'
 
@@ -214,14 +213,13 @@ class TradeApiView(APIView):
             )
 
             # Fetch the transaction type
-            transaction = Transaction.objects.get(company_id=company_id, action_type='kirim', name='savdo')
+            transaction = Transaction.objects.get(company_id=company_id, action_type='kirim', transaction_type='mijoz')
 
             # Create Payment record
             payment = Payments.objects.create(
                 company_id=company_id,
                 transaction=transaction,
                 user=request.user,
-                trade=trade,
                 client=client,
                 cash=int(total_price),
                 added=datetime.now(),
@@ -232,9 +230,9 @@ class TradeApiView(APIView):
                 service_type = ServiceType.objects.get(company_id=company_id, id=service_id)
                 Addition_service.objects.create(
                     company_id=company_id,
-                    trade=trade,
+                    # trade=trade,
                     service_type=service_type,
-                    service_price=service_price,
+                    # service_price=service_price,
                     desc=data.get("service_desc", "")
                 )
 
@@ -248,7 +246,7 @@ class TradeApiView(APIView):
             return Response({"status": "error", "message": "Storage product not found"}, status=status.HTTP_404_NOT_FOUND)
 
         except Transaction.DoesNotExist:
-            return Response({"status": "error", "message": "Transaction type 'kirim - savdo' not found"},
+            return Response({"status": "error", "message": "Transaction type 'kirim - mijoz' not found"},
                             status=status.HTTP_404_NOT_FOUND)
 
         except ServiceType.DoesNotExist:

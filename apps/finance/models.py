@@ -23,10 +23,10 @@ class Transaction(BaseModel):
 
 
 class Payments(models.Model):
-    PAYMENT_TYPE = (
-        ("Savdoga to'lov", "Savdoga to'lov"),
-        ("Mijozga to'lov", "Mijozga to'lov"),
-    )
+    # PAYMENT_TYPE = (
+    #     ("Savdoga to'lov", "Savdoga to'lov"),
+    #     ("Mijozga to'lov", "Mijozga to'lov"),
+    # )
     company_id = models.BigIntegerField(default=0)
     # payment_type = models.CharField(max_length=100, choices=PAYMENT_TYPE, default="Savdoga to'lov")
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True)
@@ -35,9 +35,9 @@ class Payments(models.Model):
     # storage = models.ForeignKey(Storage, on_delete=models.CASCADE)
     transaction = models.ForeignKey(Transaction, on_delete=models.CASCADE)
 
-    cash = models.PositiveIntegerField(default=0)
-    card = models.PositiveIntegerField(default=0)
-    other_pay = models.PositiveIntegerField(default=0)
+    cash = models.FloatField(default=0)
+    card = models.FloatField(default=0)
+    other_pay = models.FloatField(default=0)
 
     deadline = models.DateField(null=True, blank=True)
     added = models.DateTimeField()
@@ -55,7 +55,7 @@ class Payments(models.Model):
     def total(self):
         return self.cash+self.other_pay+self.card
     def __str__(self):
-        return self.total
+        return str(self.total)
     class Meta:
         verbose_name_plural = 'Payments'
         verbose_name = 'Payment'
@@ -69,9 +69,9 @@ class FinanceOutcome(BaseModel):
     # storage = models.ForeignKey(Storage, on_delete=models.CASCADE, null=True, blank=True)
     supplier = models.ForeignKey(Supplier, on_delete=models.CASCADE, null=True, blank=True)
 
-    cash = models.PositiveIntegerField(default=0)
-    card = models.PositiveIntegerField(default=0)
-    other_pay = models.PositiveIntegerField(default=0)
+    cash = models.FloatField(default=0)
+    card = models.FloatField(default=0)
+    other_pay = models.FloatField(default=0)
 
     date = models.DateTimeField(null=True, blank=True)
     desc = models.TextField(blank=True, null=True)
