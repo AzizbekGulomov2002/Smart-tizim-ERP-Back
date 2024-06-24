@@ -1,23 +1,16 @@
 from django.core.exceptions import ObjectDoesNotExist
-from django.db import transaction
-from django.db.models import Sum
-from django.shortcuts import render
 from rest_framework import viewsets, status
-from rest_framework.permissions import IsAuthenticated , AllowAny
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
-from datetime import datetime
 from apps.trade.views import CustomPaginationMixin
-from apps.users.models import Company
-from .models import Category,Product, Supplier, Storage, StorageProduct ,Format
+from .models import StorageProductOff
 from .serializers import  *
 from .decorator import is_storage_permission, is_product_permission
 from datetime import datetime, timedelta
 from rest_framework.views import APIView
 import json
-
 from ..finance.models import Transaction, FinanceOutcome
-
 
 # Product Delete Manager
 class ProductDeleteManagerAPI(APIView):
@@ -355,30 +348,33 @@ def parse_date(date_str = None):
 
 class StorageProductCreate(APIView):
     permission_classes = [IsAuthenticated]
+
     def get(self, request):
         company_id = request.user.company_id
-        product = Product.objects.select_related('format', 'category').prefetch_related('storage_products').filter(
+        products = Product.objects.select_related('format', 'category').prefetch_related('storage_products').filter(
             company_id=company_id)
-        category = Category.objects.filter(company_id=company_id)
-        supplier = Supplier.objects.filter(company_id=company_id)
-        format_ = Format.objects.filter(company_id=company_id)
+        categories = Category.objects.filter(company_id=company_id)
+        suppliers = Supplier.objects.filter(company_id=company_id)
+        formats = Format.objects.filter(company_id=company_id)
 
-        productSerializer = ProductSerializer(product, many=True)
-        categorySerializer = CategorySerializer(category, many=True)
-        supplierSerializer = SupplierSerializer(supplier, many=True)
-        formatSerializer = FormatSerializer(format_, many=True)
+        product_serializer = ProductSerializer(products, many=True)
+        category_serializer = CategorySerializer(categories, many=True)
+        supplier_serializer = SupplierSerializer(suppliers, many=True)
+        format_serializer = FormatSerializer(formats, many=True)
 
         return Response({
-            "supplier": supplierSerializer.data,
-            "category": categorySerializer.data,
-            "format": formatSerializer.data,
-            "product": productSerializer.data
+            "supplier": supplier_serializer.data,
+            "category": category_serializer.data,
+            "format": format_serializer.data,
+            "product": product_serializer.data
         })
 
     def post(self, request):
         company_id = request.user.company_id
         data = json.loads(request.body.decode('utf-8'))
         supplier = None
+        storage = None
+        finance_outcome_data = None
 
         try:
             for item in data:
@@ -387,12 +383,35 @@ class StorageProductCreate(APIView):
                     supplier = Supplier.objects.get(id=supplier_id, company_id=company_id)
                     break
 
+            for item in data:
+                if "storage" in item:
+                    storage_id = item.get("storage")
+                    storage = Storage.objects.get(id=storage_id, company_id=company_id)
+                    break
+
+            for item in data:
+                if "cash" in item or "card" in item or "other_pay" in item or "desc" in item:
+                    finance_outcome_data = {
+                        "user": request.user,
+                        "supplier": supplier,
+                        "cash": item.get("cash", 0),
+                        "card": item.get("card", 0),
+                        "other_pay": item.get("other_pay", 0),
+                        "desc": item.get("desc", ""),
+                        "deadline":item.get("deadline"),
+                        "company_id": company_id
+                    }
+                    break
+
             if not supplier:
                 return Response({"error": "Supplier not found"}, status=status.HTTP_400_BAD_REQUEST)
 
+            if not storage:
+                return Response({"error": "Storage not found"}, status=status.HTTP_400_BAD_REQUEST)
+
             storage_products = []
             for item in data:
-                if "supplier" in item:
+                if "supplier" in item or "storage" in item or "cash" in item or "card" in item or "other_pay" in item or "desc" in item:
                     continue
 
                 product_id = item.get("product")
@@ -418,14 +437,22 @@ class StorageProductCreate(APIView):
                         product.price = price
                         product.save()
 
-                date = parse_datetime(item.get("date"))
+                # Parse date and expiration fields
+                date_str = item.get("date")
+                if not date_str:
+                    return Response({"error": "Date is required"}, status=status.HTTP_400_BAD_REQUEST)
+                try:
+                    date = datetime.strptime(date_str, "%Y-%m-%dT%H:%M:%S")
+                except ValueError:
+                    return Response({"error": f"Invalid date format: {date_str}"},
+                                    status=status.HTTP_400_BAD_REQUEST)
+
                 expiration = parse_date(item.get("expiration"))
                 remind_count = item.get("remind_count") or 0
                 size_type = item.get("size_type") or "O'lchovsiz"
                 storage_type = item.get("storage_type") or "Naqtga"
-                storage_price = item.get("price")  # Ensure correct field name is used
+                storage_price = item.get("price")
 
-                # Ensure price is provided
                 if storage_price is None:
                     return Response({"error": "Price is required"}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -442,36 +469,36 @@ class StorageProductCreate(APIView):
                     date=date,
                     user=request.user,
                     supplier=supplier,
+                    storage=storage,
                     remind_count=remind_count,
                     expiration=expiration,
                 )
+                storage_product.save()
                 storage_products.append(storage_product)
 
-                try:
+            try:
+                if finance_outcome_data:
                     transaction_type = Transaction.objects.get(transaction_type='ombor', action_type='chiqim')
-                    finance_outcome_data = {
-                        "user": request.user,
-                        "tranzaction_type": transaction_type,
-                        "supplier": supplier,
-                        "cash": item.get('cash', 0),
-                        "card": item.get('card', 0),
-                        "other_pay": item.get('other_pay', 0),
-                        "desc": item.get('desc', ''),
-                    }
-                    if storage_type == "Naqtga":
-                        FinanceOutcome.objects.create(**finance_outcome_data)
-                    elif storage_type == "Qarzga":
-                        finance_outcome_data["deadline"] = parse_date(item.get("deadline"))
-                        FinanceOutcome.objects.create(**finance_outcome_data)
-                except ObjectDoesNotExist:
-                    return Response({"error": "Transaction type 'ombor' with action 'chiqim' does not exist"},
-                                    status=status.HTTP_400_BAD_REQUEST)
+                    finance_outcome_data["tranzaction_type"] = transaction_type
 
-            StorageProduct.objects.bulk_create(storage_products)
+                    # Create one FinanceOutcome for all StorageProducts
+                    finance_outcome = FinanceOutcome.objects.create(**finance_outcome_data)
+
+                    # Associate the FinanceOutcome with each StorageProduct
+                    for storage_product in storage_products:
+                        storage_product.finance_outcome = finance_outcome
+                        storage_product.save()
+
+            except ObjectDoesNotExist:
+                return Response({"error": "Transaction type 'ombor' with action 'chiqim' does not exist"},
+                                status=status.HTTP_400_BAD_REQUEST)
+
             return Response({"status": "ok"}, status=status.HTTP_201_CREATED)
 
         except Supplier.DoesNotExist:
             return Response({"error": "Supplier not found"}, status=status.HTTP_400_BAD_REQUEST)
+        except Storage.DoesNotExist:
+            return Response({"error": "Storage not found"}, status=status.HTTP_400_BAD_REQUEST)
         except Product.DoesNotExist:
             return Response({"error": "Product not found"}, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
@@ -479,5 +506,37 @@ class StorageProductCreate(APIView):
 
 
 
+class StorageProductOffViewSet(viewsets.ModelViewSet):
+    permission_classes = [IsAuthenticated]
+    serializer_class = StorageProductOffSerializer
 
+    def get_queryset(self):
+        company_id = self.request.user.company_id
+        return StorageProductOff.objects.filter(product__company_id=company_id)
 
+    # def create(self, request, *args, **kwargs):
+    #     serializer = self.get_serializer(data=request.data)
+    #     if serializer.is_valid():
+    #         serializer.save()
+    #         return Response(serializer.data, status=status.HTTP_201_CREATED)
+    #     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def create(self, request, *args, **kwargs):
+        serializers = self.get_serializer(data=request.data)
+        if serializers.is_valid():
+            serializers.save(company_id=request.user.company_id)
+            return Response(serializers.data, status=status.HTTP_201_CREATED)
+        return Response(serializers.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        instance.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)

@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from apps.products.models import Category, Product, Supplier, Storage, StorageProduct ,Format
+from apps.products.models import Category, Product, Supplier, Storage, StorageProduct ,Format,StorageProductOff
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -16,39 +16,17 @@ class StorageProductSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 class ProductSerializer(serializers.ModelSerializer):
-    # storage_products = StorageProductSerializer(many=True)
     class Meta:
         model = Product
-        fields = ['id','name','product_type', "category",'price','format','bar_code', 'storage_products'] # <  qoganlari ozgarsaham  storage_products   shu ozgarmasin
+        fields = ['id','name','product_type', "category",'price','format','bar_code', 'storage_products','current_total_count'] # <  qoganlari ozgarsaham  storage_products   shu ozgarmasin
         depth = 1
 
 
 
 class StorageSerializer(serializers.ModelSerializer):
-    # storage_products = StorageProductSerializer(many=True, read_only=True)
     class Meta:
         model = Storage
-        # fields = ['user', 'action_type', 'storage_type', 'supplier', 'storage_date', 'desc', 'storage_products']
         fields = '__all__'
-    # def to_representation(self, instance):
-    #     data = super().to_representation(instance)
-    #     # Include supplier details within the representation
-    #     supplier_data = {
-    #         'id': instance.supplier.id if instance.supplier else None,
-    #         'type': instance.supplier.supplier_type if instance.supplier else None,
-    #         'name': instance.supplier.name if instance.supplier else None
-    #     }
-    #     data['supplier'] = supplier_data
-    #     # Include user details within the representation
-    #     user_data = {
-    #         'id': instance.user.id,
-    #         'username': instance.user.username,
-    #         'first_name': instance.user.first_name,
-    #         'last_name': instance.user.last_name,
-    #         'role': instance.user.role,
-    #     }
-    #     data['user'] = user_data
-    #     return data
 
 class  FormatSerializer (serializers.ModelSerializer):
     class Meta:
@@ -56,24 +34,14 @@ class  FormatSerializer (serializers.ModelSerializer):
         fields = "__all__"
 
 class SupplierSerializer(serializers.ModelSerializer):
-    # storage_products = serializers.SerializerMethodField()
     class Meta:
         model = Supplier
         fields = "__all__"
 
-    # def get_storage_products(self, obj):
-    #     # Retrieve all related StorageProduct instances for the Supplier
-    #     storage_products = StorageProduct.objects.filter(storage__supplier=obj)
-    #     # Serialize the queryset
-    #     serializer = StorageProductSerializer(instance=storage_products, many=True)
-    #     return serializer.data
 
-    # def to_representation(self, instance):
-    #     representation = super().to_representation(instance)
-    #     # Include related Storage information within the representation
-    #     storages = Storage.objects.filter(supplier=instance)
-    #     storage_data = StorageSerializer(storages, many=True).data
-    #     representation['storages'] = storage_data
-    #     return representation
+class StorageProductOffSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = StorageProductOff
+        fields = "__all__"
     
     

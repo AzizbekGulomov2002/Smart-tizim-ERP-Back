@@ -3,6 +3,8 @@ from django.db.models import Sum
 from django.conf import settings
 from datetime import datetime
 from apps.app.models import BaseModel
+from apps.finance.models import FinanceOutcome
+
 
 # Create your models here.
 class Category(BaseModel):
@@ -39,24 +41,18 @@ class Product(BaseModel):
     def restore(self):
         self.deleted = None
         self.save()
+
+    @property
+    def current_total_count(self):
+        total_current_count = 0
+        for storage_product in self.storage_products.all():
+            total_off_count = storage_product.storageproductoff_set.aggregate(total_off=Sum('count'))['total_off'] or 0
+            total_current_count += storage_product.total_count - total_off_count
+        return total_current_count
+
     def __str__(self):
         return f"{self.name} | {self.id}"
 
-
-    @property
-    def total_storage_count(self):
-        total_quantity = sum(product.quantity for product in self.storage_products.all())
-        return total_quantity
-
-    @property
-    def current_storage_count(self):
-        total_import = \
-        self.storage_products.filter(storage__action_type='Kiritish').aggregate(total_import=Sum('count'))[
-            'total_import'] or 0
-        total_remove = \
-        self.storage_products.filter(storage__action_type='Chiqarish').aggregate(total_remove=Sum('count'))[
-            'total_remove'] or 0
-        return total_import - total_remove
 
     def __str__(self):
         return self.name
@@ -99,7 +95,8 @@ class StorageProduct(models.Model):
         ('Naqtga', 'Naqtga'),
         ('Qarzga', 'Qarzga'),
     )
-
+    storage = models.ForeignKey(Storage, on_delete=models.CASCADE)
+    supplier = models.ForeignKey(Supplier, on_delete=models.CASCADE, null=True, blank=True, related_name='storages')
     company_id = models.BigIntegerField(default=0)
     storage_type = models.CharField(max_length=20, choices=STORAGE_TYPE, default="Naqtga")
     size_type = models.CharField(max_length=20, choices=SIZE_TYPE, default="O'lchovsiz")
@@ -111,36 +108,68 @@ class StorageProduct(models.Model):
     width = models.FloatField(null=True, blank=True, default=1)  # Set a default value
     price = models.FloatField(default=1)
 
-    date = models.DateTimeField(null=True, blank=True)
+    date = models.DateTimeField()
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True)
-    supplier = models.ForeignKey(Supplier, on_delete=models.CASCADE, null=True, blank=True, related_name='storages')
+
 
     remind_count = models.FloatField(help_text='Eslatish miqdori ...', default=0)
     expiration = models.DateField(help_text='Yaroqlilik muddati ...', null=True, blank=True)
-    # total_summa = models.FloatField(default=0)
+    # desc = models.TextField(null=True, blank=True)
 
-    deleted = models.DateField(null=True, blank=True)
-    objects = DelateManager()
-    all_objects = models.Manager()
+
+    # deleted = models.DateField(null=True, blank=True)
+    # objects = DelateManager()
+    # all_objects = models.Manager()
+
 
     @property
-    def total_summa(self):
+    def total_count(self):
         if self.size_type == "O'lchovsiz":
-            return self.storage_count * self.price
+            return self.storage_count
         elif self.size_type == "O'lchovli":
-            return self.storage_count * self.part_size * self.price
+            return self.storage_count * self.part_size
         elif self.size_type == "Formatli":
-            return self.storage_count * self.width * self.height * self.price
+            return self.storage_count*self.width*self.height
         else:
             return 0
 
+    @property
+    def total_summa(self):
+        return self.price*self.total_count
 
-    def delete(self):
+    @property
+    def current_total_count(self):
+        total_off_count = self.storageproductoff_set.aggregate(total_off=Sum('count'))['total_off'] or 0
+        return self.total_count - total_off_count
+
+
+    # def delete(self):
+    #     self.deleted = datetime.now().date()
+    #     self.save()
+
+    def delete(self, *args, **kwargs):
+        # Delete related FinanceOutcome instances
+        FinanceOutcome.objects.filter(
+            user=self.user,
+            supplier=self.supplier,
+            storage_product=self
+        ).delete()
         self.deleted = datetime.now().date()
         self.save()
 
+
     def __str__(self):
         return self.product.name
+
+
+
+
+class StorageProductOff(models.Model):
+    company_id = models.BigIntegerField(default=0)
+    product = models.ForeignKey(StorageProduct, on_delete=models.CASCADE)
+    count = models.FloatField()
+    def __str__(self):
+        return f"{self.count}"
 
 
 

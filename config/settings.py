@@ -57,6 +57,13 @@ INSTALLED_APPS = [
 
 ]
 
+CORS_ORIGIN_WHITELIST = [
+    "http://localhost:5173",
+]
+
+CORS_ORIGIN_ALLOW_ALL = True
+CORS_ALLOW_CREDENTIALS = True
+
 INTERNAL_IPS = [
     "127.0.0.1",
 ]
@@ -196,7 +203,30 @@ USE_I18N = True
 USE_TZ = True
 
 
-
+JAZZMIN_UI_TWEAKS = {
+    'navbar_small_text': False,
+    'footer_small_text': False,
+    'body_small_text': False,
+    'brand_small_text': False,
+    'brand_colour': 'navbar-primary',
+    'accent': 'accent-navy',
+    'navbar': 'navbar-light',
+    'no_navbar_border': False,
+    'navbar_fixed': True,
+    'layout_boxed': False,
+    'footer_fixed': False,
+    'sidebar_fixed': True,
+    'sidebar': 'sidebar-dark-primary',
+    'sidebar_nav_small_text': False,
+    'sidebar_disable_expand': False,
+    'sidebar_nav_child_indent': True,
+    'sidebar_nav_compact_style': False,
+    'sidebar_nav_legacy_style': False,
+    'sidebar_nav_flat_style': False,
+    'app_name': 'Your App Name',
+    'usermenu_hide': False,
+    'usermenu_collapsed': False,
+}
 
 JAZZMIN_SETTINGS = {
     "site_title": "Smart-tizim ERP",
@@ -234,6 +264,14 @@ JAZZMIN_SETTINGS = {
             "permissions": ["books.view_book"]
         }]
     },
+    'site_title': 'Admin Panel',
+    'site_header': 'Admin Panel',
+    'site_logo': 'path/to/logo.png',
+    'welcome_sign': 'Welcome to the Smart tizim ERP superadmin panel',
+    'search_model': 'auth.User',
+    'show_sidebar': True,
+    'navigation_expanded': False,
+    'hide_apps': [],
     # icons
     "icons": {
         "auth": "fas fa-users-cog",
@@ -249,6 +287,7 @@ JAZZMIN_SETTINGS = {
         "products.Category": "fa fa-tags",
         "products.Format": "fa fa-th-list",
         "products.Supplier": "fa fa-id-card",
+        "products.StorageProductOff": "fa fa-trash",
 
         "finance.FinanceOutcome": "fa fa-suitcase",
         "finance.Payments": "fa fa-credit-card",

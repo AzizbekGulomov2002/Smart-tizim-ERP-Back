@@ -1,7 +1,6 @@
 from django.db import models
 from django.conf import settings
 from apps.app.models import BaseModel
-from apps.products.models import Supplier
 from apps.trade.models import Client
 
 
@@ -66,8 +65,8 @@ class FinanceOutcome(BaseModel):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True)
     tranzaction_type = models.ForeignKey(Transaction, on_delete=models.CASCADE)
     client = models.ForeignKey(Client, on_delete=models.CASCADE, null=True, blank=True)
-    # storage = models.ForeignKey(Storage, on_delete=models.CASCADE, null=True, blank=True)
-    supplier = models.ForeignKey(Supplier, on_delete=models.CASCADE, null=True, blank=True)
+    supplier = models.ForeignKey("products.Supplier", on_delete=models.CASCADE, null=True, blank=True)
+    storage_product = models.ForeignKey("products.StorageProduct", on_delete=models.CASCADE, null=True, blank=True) # For delete StorageProduct related FinanceOutcome
 
     cash = models.FloatField(default=0)
     card = models.FloatField(default=0)

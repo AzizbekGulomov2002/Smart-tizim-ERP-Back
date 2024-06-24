@@ -11,15 +11,14 @@ admin.site.register(Format)
 
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
-    list_display = ('id', 'name', 'price', 'product_type')
+    list_display = ('id', 'name', 'price', 'product_type','current_total_count')
 
 @admin.register(StorageProduct)
 class StorageProductAdmin(admin.ModelAdmin):
-    list_display = ('id', 'get_product_name', 'date', 'storage_count','total_summa',"storage_type","size_type")
+    list_display = ('id','storage','get_product_name', 'date',"storage_type","size_type",'price', "total_count",'total_summa')
     list_filter = ('date',)
     search_fields = ('product__name',)
     ordering = ('-date',)
-
     def get_product_name(self, obj):
         return obj.product.name
     get_product_name.short_description = 'Product Name'
@@ -30,6 +29,10 @@ class StorageProductAdmin(admin.ModelAdmin):
 class StorageAdmin(admin.ModelAdmin):
     list_display = ('id','name',)
 
+
+@admin.register(StorageProductOff)
+class StorageProductOffAdmin(admin.ModelAdmin):
+    list_display = ('id',"count")
 
 
 
