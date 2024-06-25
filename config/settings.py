@@ -65,9 +65,10 @@ CORS_ALLOW_CREDENTIALS = True
 #     "http://localhost:5173",
 # ]
 ##
-INTERNAL_IPS = [
-    "127.0.0.1",
-]
+
+# INTERNAL_IPS = [
+#     "127.0.0.1",
+# ]
 
 # LOGGING = {
 #     'version':1,
