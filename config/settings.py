@@ -64,7 +64,7 @@ CORS_ALLOW_CREDENTIALS = True
 # CORS_ORIGIN_WHITELIST = [
 #     "http://localhost:5173",
 # ]
-
+##
 INTERNAL_IPS = [
     "127.0.0.1",
 ]
