@@ -11,9 +11,9 @@ class Company(models.Model):
         ('BEST', 'Best'),
     )
     comp_name = models.CharField(max_length=500)
-    full_name = models.CharField(max_length=500) # noqa
-    phone = models.IntegerField(unique=True)
-    email = models.EmailField(null=True,unique=True, blank=True)
+    # full_name = models.CharField(max_length=500) # noqa
+    # phone = models.IntegerField(unique=True)
+    # email = models.EmailField(null=True,unique=True, blank=True)
     is_active = models.BooleanField(default=True)
     created = models.DateField() 
 
@@ -50,11 +50,6 @@ class User(AbstractUser):
     is_finance = models.BooleanField(default=False)
     is_statistics = models.BooleanField(default=False)
     is_storage = models.BooleanField(default=False)
-
-    # dispatcher = models.BooleanField(default=False)
-
-    # salary = models.PositiveIntegerField('maoshi',default=0)
-    # wallet = models.IntegerField('qarzi haqqi',default=0)
     description = models.TextField(verbose_name="Description", null=True, blank=True)
     role = models.CharField(max_length=15, choices=Role.choices)
     def __str__(self):
