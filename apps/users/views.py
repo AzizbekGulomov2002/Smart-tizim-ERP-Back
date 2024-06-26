@@ -99,15 +99,17 @@ class LoginApiView(APIView):
         username = request.data.get('username')
         password = request.data.get('password')
         if not username or not password:
+            # noqa multilanguage
             return Response({"error": {"message": "Foydalanuvchi nomi va parol kiritilishi kerak"}}, status=status.HTTP_400_BAD_REQUEST)
         try:
             user = User.objects.get(username=username)
         except User.DoesNotExist:
             return Response({"error": {"message": "Foydalanuvchi topilmadi"}}, status=status.HTTP_404_NOT_FOUND)
         if not check_password(password, user.password):
-            return Response({"error": {"message": "Foydalanuvchi nomi yoki parolda xatolik"}}, status=status.HTTP_401_UNAUTHORIZED)
+            return Response({"error": {"message": "Parolda xatolik"}}, status=status.HTTP_401_UNAUTHORIZED)
         token, created = Token.objects.get_or_create(user=user)
         return Response({"token": token.key})
+
 
 
 
