@@ -71,24 +71,40 @@ class UserCreateAPIView(APIView):
 
         return Response({"error": "User limit reached for your tariff plan."}, status=status.HTTP_400_BAD_REQUEST)
 
+# class LoginApiView(APIView):
+#     permission_classes = [AllowAny]
+#     def post(self, request):
+#         username = request.data.get('username')
+#         password = request.data.get('password')
+#         try:
+#             user = User.objects.get(username=username)
+#             print(check_password(password, user.password))
+#             print(check_password(password, user.password))
+
+#             if check_password(password, user.password):
+#                 tokens = Token.objects.get_or_create(user=user)
+#                 return Response({
+#                     "token":tokens[0].key,
+#                     })
+#             return Response({"error": "Foydalanuvchi nomi yoki parolda xatolik"}, status=status.HTTP_401_UNAUTHORIZED)
+#         except User.DoesNotExist:
+#             return Response({"error": "Foydalanuvchi topilmadi"}, status=status.HTTP_404_NOT_FOUND)
+
 class LoginApiView(APIView):
     permission_classes = [AllowAny]
     def post(self, request):
         username = request.data.get('username')
         password = request.data.get('password')
+        if not username or not password:
+            return Response({"error": "Foydalanuvchi nomi va parol kiritilishi kerak"}, status=status.HTTP_400_BAD_REQUEST)
         try:
             user = User.objects.get(username=username)
-            print(check_password(password, user.password))
-            print(check_password(password, user.password))
-
-            if check_password(password, user.password):
-                tokens = Token.objects.get_or_create(user=user)
-                return Response({
-                    "token":tokens[0].key,
-                    })
-            return Response({"error": "Foydalanuvchi nomi yoki parolda xatolik"}, status=status.HTTP_401_UNAUTHORIZED)
         except User.DoesNotExist:
             return Response({"error": "Foydalanuvchi topilmadi"}, status=status.HTTP_404_NOT_FOUND)
+        if not check_password(password, user.password):
+            return Response({"error": "Foydalanuvchi nomi yoki parolda xatolik"}, status=status.HTTP_401_UNAUTHORIZED)
+        token, created = Token.objects.get_or_create(user=user)
+        return Response({"token": token.key})
 
 
 
