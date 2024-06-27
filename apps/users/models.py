@@ -11,15 +11,9 @@ class Company(models.Model):
         ('BEST', 'Best'),
     )
     comp_name = models.CharField(max_length=500)
-    # full_name = models.CharField(max_length=500) # noqa
-    # phone = models.IntegerField(unique=True)
-    # email = models.EmailField(null=True,unique=True, blank=True)
     is_active = models.BooleanField(default=True)
-    created = models.DateField() 
-
+    created = models.DateField()
     active_days = models.DateField()
-    # end_date = models.DateField(null=True,blank=True)
-    # sum = models.IntegerField(default=0)
     tariff = models.CharField(max_length=20, choices=TARIFF, default="Best")
     currency_type = models.CharField(max_length=200, help_text="Valyuta turini bering: So'm, Rubl, Dollar ...")
 
@@ -34,7 +28,11 @@ class Company(models.Model):
     def __str__(self):
         return self.comp_name
 
-
+class Position(models.Model):  # Worker types: Gardener, Warehouse man, Driver ...
+    company_id = models.BigIntegerField(default=0)
+    name = models.CharField(max_length=200)
+    def __str__(self):
+        return self.name
 
 
 class User(AbstractUser):
@@ -43,6 +41,7 @@ class User(AbstractUser):
         DIRECTOR = "DIRECTOR", "director"
         MANAGER = "MANAGER", "manager"
 
+    position = models.ForeignKey(Position, on_delete=models.CASCADE, null=True, blank=True)
     is_user_create = models.BooleanField(default=False)
     is_trade = models.BooleanField(default=False)
     is_client = models.BooleanField(default=False)
@@ -65,10 +64,8 @@ class CompanyPayments(models.Model):
     date = models.DateTimeField()
     finish = models.DateField()
     description = models.TextField(null=True,blank=True)
-
     def __str__(self):
         return f"Company: {self.company_id} | Payment: {self.sum}"
-    
     class Meta:
         verbose_name = "Company Payment"
         verbose_name_plural = "Company Payments"

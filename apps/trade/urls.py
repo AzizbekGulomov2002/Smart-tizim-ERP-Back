@@ -3,9 +3,12 @@ from rest_framework.routers import DefaultRouter
 
 from apps.trade.views import ClientViewSet, TradeApiView, ServiceTypeViewSet, \
     AdditionServiceViewSet,ClientDeleteManagerAPI
+from apps.users.views import PositionViewSet
 
 router = DefaultRouter()
 router.register(r'clients', ClientViewSet, basename='clients')
+router.register(r'positions', PositionViewSet, basename='position')
+
 
 # router.register(r'trade-details', TradeDetailViewSet)
 router.register(r'service_types', ServiceTypeViewSet, basename='service-types')
