@@ -113,3 +113,62 @@ class LoginApiView(APIView):
 
 
 
+# class MeView(APIView):
+#     permission_classes = [IsAuthenticated]  # Ensure the user is authenticated
+#     def get(self, request):
+#         user = request.user  # Get the authenticated user
+#         if user.is_anonymous:
+#             return Response({"error": "User is not authenticated."},
+#                             status=status.HTTP_401_UNAUTHORIZED)
+
+#         try:
+#             company = Company.objects.get(id=user.company_id)  # Assuming user.company_id is valid
+
+#             user_serializer = UserSerializer(user)
+#             company_serializer = CompanySerializer(company)
+#             return Response({
+#                 "user": user_serializer.data,
+#                 "company": company_serializer.data
+#             }, status=status.HTTP_200_OK)
+#         except Company.DoesNotExist:
+#             return Response({"error": "Company not found for the current user."},
+#                             status=status.HTTP_404_NOT_FOUND)
+
+
+class MeView(APIView):
+    permission_classes = [IsAuthenticated]  # Ensure the user is authenticated
+    
+    def get(self, request):
+        user = request.user  # Get the authenticated user
+        
+        if user.is_anonymous:
+            return Response({
+                "error": {
+                    "message": "Bunday foydalanuvchi mavjud emas.",
+                    "code": "unauthorized"
+                }
+            }, status=status.HTTP_401_UNAUTHORIZED)
+
+        try:
+            company = Company.objects.get(id=user.company_id)  # Assuming user.company_id is valid
+
+            user_serializer = UserSerializer(user)
+            company_serializer = CompanySerializer(company)
+            return Response({
+                "user": user_serializer.data,
+                "company": company_serializer.data
+            }, status=status.HTTP_200_OK)
+        except Company.DoesNotExist:
+            return Response({
+                "error": {
+                    "message": "Korxonada bunday foydalanuvchi mavjud emas",
+                    "code": "not_found"
+                }
+            }, status=status.HTTP_404_NOT_FOUND)
+
+
+
+
+
+
+
