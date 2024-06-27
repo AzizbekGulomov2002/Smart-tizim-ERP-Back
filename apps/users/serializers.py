@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from .models import Company , User
+from .models import Company , User, Position
 
 class CompanySerializer(serializers.ModelSerializer):
     class Meta:
