@@ -48,7 +48,7 @@ class CreateCompanyUserAPIView(APIView):
 
 
 class UserCreateAPIView(APIView):
-    permission_classes =[IsAuthenticated]
+    permission_classes =[AllowAny]
 
     @is_user_permission
     def post(self, request):
@@ -136,7 +136,7 @@ class LoginApiView(APIView):
 
 
 class MeView(APIView):
-    permission_classes = [IsAuthenticated]  # Ensure the user is authenticated
+    permission_classes = [AllowAny]  # Ensure the user is authenticated
     
     def get(self, request):
         user = request.user  # Get the authenticated user

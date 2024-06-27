@@ -14,7 +14,7 @@ from ..finance.models import Transaction, FinanceOutcome
 
 # Product Delete Manager
 class ProductDeleteManagerAPI(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
     def get(self, request):
         company_id = self.request.user.company_id
         all_delete = datetime.now().date() - timedelta(days=30) # Auto delete in 30 days
@@ -47,7 +47,7 @@ class ProductDeleteManagerAPI(APIView):
 
 
 class FormatViewSet(ModelViewSet):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
     serializer_class = FormatSerializer
     def get_queryset(self):
         company_id = self.request.user.company_id
@@ -81,7 +81,7 @@ class FormatViewSet(ModelViewSet):
     
 
 class CategoryViewSet(ModelViewSet):
-    permission_classes= [IsAuthenticated]
+    permission_classes= [AllowAny]
     serializer_class = CategorySerializer
     def get_queryset(self):
         company_id = self.request.user.company_id
@@ -120,7 +120,7 @@ class CategoryViewSet(ModelViewSet):
 
 
 class ProductViewSet(CustomPaginationMixin, viewsets.ModelViewSet):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
     serializer_class = ProductSerializer
 
     def get_queryset(self):
@@ -156,7 +156,7 @@ class ProductViewSet(CustomPaginationMixin, viewsets.ModelViewSet):
 
 
 class ProductCreateAPIView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
     def get(self, request):
         company_id = request.user.company_id
         products = Product.objects.filter(company_id=company_id)
@@ -217,7 +217,7 @@ class ProductCreateAPIView(APIView):
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
-class SupplierViewSet(viewsets.ModelViewSet):
+class SupplierViewSet(viewsets.AllowAny):
     permission_classes = [IsAuthenticated]
     serializer_class = SupplierSerializer
     def get_queryset(self):
@@ -255,7 +255,7 @@ class SupplierViewSet(viewsets.ModelViewSet):
         instance.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
-class StorageViewSet(viewsets.ModelViewSet):
+class StorageViewSet(viewsets.AllowAny):
     permission_classes = [IsAuthenticated]
     serializer_class = StorageSerializer
     def get_queryset(self):
@@ -347,7 +347,7 @@ def parse_date(date_str = None):
 
 
 class StorageProductCreate(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
 
     def get(self, request):
         company_id = request.user.company_id
@@ -507,7 +507,7 @@ class StorageProductCreate(APIView):
 
 
 class StorageProductOffViewSet(viewsets.ModelViewSet):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
     serializer_class = StorageProductOffSerializer
 
     def get_queryset(self):
