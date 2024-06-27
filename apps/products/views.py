@@ -38,8 +38,8 @@ class BasePagination(PageNumberPagination):
 class CustomPaginationMixin:
     pagination_class = BasePagination
 
-class BasePermissionViewSet(viewsets.ModelViewSet):
-    permission_classes = [IsAuthenticatedOrReadOnly]
+# class BasePermissionViewSet(viewsets.ModelViewSet):
+#     permission_classes = [IsAuthenticatedOrReadOnly]
 
 
 
