@@ -217,8 +217,8 @@ class ProductCreateAPIView(APIView):
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
-class SupplierViewSet(viewsets.AllowAny):
-    permission_classes = [IsAuthenticated]
+class SupplierViewSet(viewsets.ModelViewSet):
+    permission_classes = [AllowAny]
     serializer_class = SupplierSerializer
     def get_queryset(self):
         company_id = self.request.user.company_id
@@ -255,8 +255,8 @@ class SupplierViewSet(viewsets.AllowAny):
         instance.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
-class StorageViewSet(viewsets.AllowAny):
-    permission_classes = [IsAuthenticated]
+class StorageViewSet(viewsets.ModelViewSet):
+    permission_classes = [AllowAny]
     serializer_class = StorageSerializer
     def get_queryset(self):
         company_id = self.request.user.company_id
