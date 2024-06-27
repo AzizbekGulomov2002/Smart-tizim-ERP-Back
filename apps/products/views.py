@@ -3,7 +3,7 @@ from rest_framework import viewsets, status
 from rest_framework.permissions import IsAuthenticated,AllowAny
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
-from apps.trade.views import CustomPaginationMixin
+from apps.trade.views import CustomPaginationMixin, BasePagination
 from .models import StorageProductOff
 from .serializers import  *
 from .decorator import is_storage_permission, is_product_permission
@@ -14,7 +14,7 @@ from ..finance.models import Transaction, FinanceOutcome
 
 # Product Delete Manager
 class ProductDeleteManagerAPI(APIView):
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticated]
     def get(self, request):
         company_id = self.request.user.company_id
         all_delete = datetime.now().date() - timedelta(days=30) # Auto delete in 30 days
@@ -47,7 +47,7 @@ class ProductDeleteManagerAPI(APIView):
 
 
 class FormatViewSet(ModelViewSet):
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticated]
     serializer_class = FormatSerializer
     def get_queryset(self):
         company_id = self.request.user.company_id
@@ -81,7 +81,7 @@ class FormatViewSet(ModelViewSet):
     
 
 class CategoryViewSet(ModelViewSet):
-    permission_classes= [AllowAny]
+    permission_classes= [IsAuthenticated]
     serializer_class = CategorySerializer
     def get_queryset(self):
         company_id = self.request.user.company_id
@@ -122,6 +122,7 @@ class CategoryViewSet(ModelViewSet):
 class ProductViewSet(CustomPaginationMixin, viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
     serializer_class = ProductSerializer
+    pagination_class = BasePagination
 
     def get_queryset(self):
         company_id = self.request.user.company_id
@@ -156,7 +157,7 @@ class ProductViewSet(CustomPaginationMixin, viewsets.ModelViewSet):
 
 
 class ProductCreateAPIView(APIView):
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticated]
     def get(self, request):
         company_id = request.user.company_id
         products = Product.objects.filter(company_id=company_id)
@@ -218,7 +219,7 @@ class ProductCreateAPIView(APIView):
 
 
 class SupplierViewSet(viewsets.ModelViewSet):
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticated]
     serializer_class = SupplierSerializer
     def get_queryset(self):
         company_id = self.request.user.company_id
@@ -256,7 +257,7 @@ class SupplierViewSet(viewsets.ModelViewSet):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 class StorageViewSet(viewsets.ModelViewSet):
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticated]
     serializer_class = StorageSerializer
     def get_queryset(self):
         company_id = self.request.user.company_id
@@ -347,7 +348,7 @@ def parse_date(date_str = None):
 
 
 class StorageProductCreate(APIView):
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticated]
 
     def get(self, request):
         company_id = request.user.company_id
@@ -507,7 +508,7 @@ class StorageProductCreate(APIView):
 
 
 class StorageProductOffViewSet(viewsets.ModelViewSet):
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticated]
     serializer_class = StorageProductOffSerializer
 
     def get_queryset(self):
