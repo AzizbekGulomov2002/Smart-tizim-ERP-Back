@@ -1,6 +1,6 @@
 from django.contrib import admin
 from apps.users.status_admin import company_off_view, company_on_view
-from apps.users.views import LoginApiView, CreateCompanyUserAPIView, UserCreateAPIView
+from apps.users.views import LoginApiView, CreateCompanyUserAPIView, UserCreateAPIView,MeView
 from django.urls import path, include
 from rest_framework import routers
 from rest_framework.documentation import include_docs_urls
