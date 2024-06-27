@@ -120,7 +120,7 @@ class CategoryViewSet(ModelViewSet):
 
 
 class ProductViewSet(CustomPaginationMixin, viewsets.ModelViewSet):
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticated]
     serializer_class = ProductSerializer
 
     def get_queryset(self):
