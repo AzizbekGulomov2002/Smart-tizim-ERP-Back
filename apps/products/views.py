@@ -12,6 +12,35 @@ from rest_framework.views import APIView
 import json
 from ..finance.models import Transaction, FinanceOutcome
 
+
+
+# Pagination class
+
+class BasePagination(PageNumberPagination):
+    page_size = 10
+    page_size_query_param = "page_size"
+    max_page_size = 50000
+
+    def get_paginated_response(self, data):
+        return Response({
+            "page_size": self.page_size,
+            "total_objects": self.page.paginator.count,
+            "total_pages": self.page.paginator.num_pages,
+            "current_page_number": self.page.number,
+            "next": self.get_next_link(),
+            "previous": self.get_previous_link(),
+            "results": data,
+        })
+
+# Mixin for custom pagination
+class CustomPaginationMixin:
+    pagination_class = BasePagination
+
+class BasePermissionViewSet(viewsets.ModelViewSet):
+    permission_classes = [IsAuthenticatedOrReadOnly]
+
+
+
 # Product Delete Manager
 class ProductDeleteManagerAPI(APIView):
     permission_classes = [IsAuthenticated]
