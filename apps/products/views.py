@@ -1,47 +1,29 @@
 from django.core.exceptions import ObjectDoesNotExist
-from rest_framework import viewsets, status
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import viewsets, status, filters
+from rest_framework.filters import SearchFilter
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticated,AllowAny
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 from apps.trade.views import CustomPaginationMixin, BasePagination
+from .filters import ProductFilter
 from .models import StorageProductOff
 from .serializers import  *
 from .decorator import is_storage_permission, is_product_permission
 from datetime import datetime, timedelta
 from rest_framework.views import APIView
-from rest_framework.pagination import PageNumberPagination
-
 import json
 from ..finance.models import Transaction, FinanceOutcome
 
 
-
-# Pagination class
-
 class BasePagination(PageNumberPagination):
     page_size = 10
-    page_size_query_param = "page_size"
-    max_page_size = 50000
+    page_size_query_param = 'page_size'
+    max_page_size = 1000
 
-    def get_paginated_response(self, data):
-        return Response({
-            "page_size": self.page_size,
-            "total_objects": self.page.paginator.count,
-            "total_pages": self.page.paginator.num_pages,
-            "current_page_number": self.page.number,
-            "next": self.get_next_link(),
-            "previous": self.get_previous_link(),
-            "results": data,
-        })
-
-# Mixin for custom pagination
 class CustomPaginationMixin:
     pagination_class = BasePagination
-
-# class BasePermissionViewSet(viewsets.ModelViewSet):
-#     permission_classes = [IsAuthenticatedOrReadOnly]
-
-
 
 # Product Delete Manager
 class ProductDeleteManagerAPI(APIView):
@@ -150,28 +132,39 @@ class CategoryViewSet(ModelViewSet):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-class ProductViewSet(CustomPaginationMixin, viewsets.ModelViewSet):
+
+
+class ProductViewSet(viewsets.ModelViewSet):
+    queryset = Product.objects.all()
     permission_classes = [IsAuthenticated]
     serializer_class = ProductSerializer
     pagination_class = BasePagination
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter]
+    filterset_class = ProductFilter
+    search_fields = ("protype__name", "action_type", "storage_date", "storage_count")
 
     def get_queryset(self):
         company_id = self.request.user.company_id
         queryset = Product.objects.filter(company_id=company_id).order_by('-id')
         return queryset
+
     def list(self, request, *args, **kwargs):
-        queryset = self.get_queryset()
+        queryset = self.filter_queryset(self.get_queryset())
+        page = self.paginate_queryset(queryset)
+
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
-    @is_product_permission
+
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_object()
         serializer = self.get_serializer(instance)
         return Response(serializer.data)
-    
-    @is_product_permission
+
     def create(self, request, *args, **kwargs):
-        ### create function is located in ProductCreateAPIView class
         return Response(status=status.HTTP_400_BAD_REQUEST)
 
     def update(self, request, *args, **kwargs):
@@ -181,11 +174,11 @@ class ProductViewSet(CustomPaginationMixin, viewsets.ModelViewSet):
             serializer.save()
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
         instance.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
-
 
 class ProductCreateAPIView(APIView):
     permission_classes = [IsAuthenticated]
