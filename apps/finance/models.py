@@ -22,16 +22,9 @@ class Transaction(BaseModel):
 
 
 class Payments(models.Model):
-    # PAYMENT_TYPE = (
-    #     ("Savdoga to'lov", "Savdoga to'lov"),
-    #     ("Mijozga to'lov", "Mijozga to'lov"),
-    # )
     company_id = models.BigIntegerField(default=0)
-    # payment_type = models.CharField(max_length=100, choices=PAYMENT_TYPE, default="Savdoga to'lov")
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True)
-    # trade = models.ForeignKey(Trade, on_delete=models.CASCADE, null=True, blank=True, related_name="trade_set")
     client = models.ForeignKey(Client, on_delete=models.CASCADE, null=True, blank=True, related_name="payments_set")
-    # storage = models.ForeignKey(Storage, on_delete=models.CASCADE)
     transaction = models.ForeignKey(Transaction, on_delete=models.CASCADE)
 
     cash = models.FloatField(default=0)
@@ -66,7 +59,7 @@ class FinanceOutcome(BaseModel):
     tranzaction_type = models.ForeignKey(Transaction, on_delete=models.CASCADE)
     client = models.ForeignKey(Client, on_delete=models.CASCADE, null=True, blank=True)
     supplier = models.ForeignKey("products.Supplier", on_delete=models.CASCADE, null=True, blank=True)
-    storage_product = models.ForeignKey("products.StorageProduct", on_delete=models.CASCADE, null=True, blank=True) # For delete StorageProduct related FinanceOutcome
+    storage_product = models.ForeignKey("products.StorageProduct", on_delete=models.CASCADE, null=True, blank=True) # For delete StorageProduct related
 
     cash = models.FloatField(default=0)
     card = models.FloatField(default=0)
@@ -77,9 +70,10 @@ class FinanceOutcome(BaseModel):
 
     deadline = models.DateField(null=True, blank=True)
 
-    @property
-    def total(self):
-        return self.cash + self.other_pay + self.card
+    total = models.FloatField(default=0)
+    # @property
+    # def total(self):
+    #     return self.cash + self.other_pay + self.card
 
     def __str__(self):
         return self.name

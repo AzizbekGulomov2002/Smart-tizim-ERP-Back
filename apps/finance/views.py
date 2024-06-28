@@ -1,10 +1,13 @@
-from rest_framework import viewsets, status
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import viewsets, status,filters
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from .filters import TransactionFilter
+from .filters import TransactionFilter, PaymentsFilter
 from .models import Transaction, Payments, FinanceOutcome
 from .serializers import TransactionSerializer, PaymentsSerializer, FinanceOutcomeSerializer
 from .decorator import is_finance_permission
+from ..app.views import BasePagination
+
 
 class TransactionViewSet(viewsets.ModelViewSet):
     serializer_class = TransactionSerializer
@@ -45,6 +48,10 @@ class TransactionViewSet(viewsets.ModelViewSet):
 class PaymentsViewSet(viewsets.ModelViewSet):
     serializer_class = PaymentsSerializer
     permission_classes = [IsAuthenticated]
+    pagination_class = BasePagination
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter]
+    filterset_class = PaymentsFilter
+    search_fields = ['client__name', 'desc']
     def get_queryset(self):
         company_id = self.request.user.company_id
         queryset = Payments.objects.filter(company_id=company_id)
@@ -79,8 +86,6 @@ class PaymentsViewSet(viewsets.ModelViewSet):
         instance = self.get_object()
         instance.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
-
-
 
 class FinanceOutcomeViewSet(viewsets.ModelViewSet):
     serializer_class = FinanceOutcomeSerializer
