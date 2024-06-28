@@ -7,13 +7,13 @@ class ProductFilter(django_filters.FilterSet):
     product_type = django_filters.CharFilter(method='filter_by_product_type')
     price__gte = django_filters.NumberFilter(field_name="price", lookup_expr='gte')
     price__lte = django_filters.NumberFilter(field_name="price", lookup_expr='lte')
-    category__name = django_filters.CharFilter(field_name="category__name", lookup_expr='icontains')
-    format__name = django_filters.CharFilter(field_name="format__name", lookup_expr='icontains')
+    category_id = django_filters.NumberFilter(field_name="category_id", lookup_expr='exact')
+    format_id = django_filters.NumberFilter(field_name="format_id", lookup_expr='exact')
     bar_code = django_filters.CharFilter(field_name="bar_code", lookup_expr='icontains')
 
     class Meta:
         model = Product
-        fields = ['product_type', 'price__gte', 'price__lte', 'category__name', 'format__name', 'bar_code']
+        fields = ['product_type', 'price__gte', 'price__lte', 'category_id', 'format_id', 'bar_code']
 
     def filter_by_product_type(self, queryset, name, value):
         product_types = value.split(',')
@@ -24,17 +24,14 @@ class ProductFilter(django_filters.FilterSet):
 
 
 class CategoryFilter(django_filters.FilterSet):
-    # name = django_filters.CharFilter(field_name="name", lookup_expr='icontains')
-    # company_id = django_filters.NumberFilter(field_name="company_id", lookup_expr='exact')
-    id = django_filters.NumberFilter(field_name="id", lookup_expr='exact')
+    name = django_filters.CharFilter(field_name="name", lookup_expr='icontains')
     class Meta:
         model = Category
-        fields = ['id']
+        fields = ['name']
 
 
 class FormatFilter(django_filters.FilterSet):
-    # name = django_filters.CharFilter(field_name="name", lookup_expr='icontains')
-    id = django_filters.NumberFilter(field_name="id", lookup_expr='exact')
+    name = django_filters.CharFilter(field_name="name", lookup_expr='icontains')
     class Meta:
         model = Format
-        fields = ['id']
+        fields = ['name']
