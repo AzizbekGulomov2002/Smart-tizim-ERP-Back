@@ -215,7 +215,7 @@ class ProductCreateAPIView(APIView):
             price = item.get("price")
             category_id = item.get("category_id")
             format_id = item.get("format_id")
-            product_type = item.get("product_type", 'Sanaladigan')
+            product_type = item.get("product_type")
             bar_code = item.get("bar_code", "")
             if not name or not price or not category_id or not format_id:
                 return Response(
