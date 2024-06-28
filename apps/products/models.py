@@ -26,7 +26,7 @@ class Product(BaseModel):
         ('Sanaladigan', 'Sanaladigan'),
         ('Sanalmaydigan', 'Sanalmaydigan')
     ]
-    product_type = models.CharField(max_length=20, choices=PRODUCT_TYPE , default='Sanaladigan')
+    product_type = models.CharField(max_length=20, choices=PRODUCT_TYPE)
     category = models.ForeignKey(Category, on_delete=models.CASCADE)
     format = models.ForeignKey(Format, on_delete=models.CASCADE)
     price = models.PositiveIntegerField()
