@@ -234,7 +234,7 @@ class AllCategoryViewSet(ModelViewSet):
 
 
 class ProductViewSet(viewsets.ModelViewSet):
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticated]
     serializer_class = ProductSerializer
     pagination_class = BasePagination
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
@@ -242,8 +242,8 @@ class ProductViewSet(viewsets.ModelViewSet):
     search_fields = ("protype__name", "action_type", "storage_date", "storage_count")
 
     def get_queryset(self):
-        company_id = 1
-        # company_id = self.request.user.company_id
+        # company_id = 1
+        company_id = self.request.user.company_id
         queryset = Product.objects.filter(company_id=company_id).order_by('-id')
         return queryset
 
