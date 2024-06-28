@@ -145,7 +145,6 @@ class CategoryViewSet(ModelViewSet):
 
 
 class ProductViewSet(viewsets.ModelViewSet):
-    queryset = Product.objects.all()
     permission_classes = [IsAuthenticated]
     serializer_class = ProductSerializer
     pagination_class = BasePagination
