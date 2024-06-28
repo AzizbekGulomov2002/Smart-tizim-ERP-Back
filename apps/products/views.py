@@ -8,9 +8,9 @@ from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 from apps.trade.views import CustomPaginationMixin, BasePagination
 from apps.products.filters import *
-from apps.app.models import StorageProductOff
-from .serializers import  *
-from .decorator import is_storage_permission, is_product_permission
+from apps.products.models import StorageProductOff
+from apps.products.serializers import  *
+from apps.products.decorator import is_storage_permission, is_product_permission
 from datetime import datetime, timedelta
 from rest_framework.views import APIView
 import json
