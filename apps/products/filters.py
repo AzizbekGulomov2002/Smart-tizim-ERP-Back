@@ -25,15 +25,16 @@ class ProductFilter(django_filters.FilterSet):
 
 class CategoryFilter(django_filters.FilterSet):
     # name = django_filters.CharFilter(field_name="name", lookup_expr='icontains')
-    company_id = django_filters.NumberFilter(field_name="company_id", lookup_expr='exact')
+    # company_id = django_filters.NumberFilter(field_name="company_id", lookup_expr='exact')
+    id = django_filters.NumberFilter(field_name="id", lookup_expr='exact')
     class Meta:
         model = Category
-        fields = ['company_id']
+        fields = ['id']
 
 
 class FormatFilter(django_filters.FilterSet):
     # name = django_filters.CharFilter(field_name="name", lookup_expr='icontains')
-    company_id = django_filters.NumberFilter(field_name="company_id", lookup_expr='exact')
+    id = django_filters.NumberFilter(field_name="id", lookup_expr='exact')
     class Meta:
         model = Format
-        fields = ['company_id']
+        fields = ['id']
