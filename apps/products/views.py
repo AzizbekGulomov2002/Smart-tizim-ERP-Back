@@ -1,10 +1,11 @@
 from django.core.exceptions import ObjectDoesNotExist
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import viewsets, status, filters
-from rest_framework.pagination import PageNumberPagination
-from rest_framework.permissions import IsAuthenticated,AllowAny
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
+
+from apps.app.views import BasePagination
 from apps.products.filters import ProductFilter, FormatFilter, CategoryFilter
 from apps.products.serializers import  *
 from apps.products.decorator import is_storage_permission, is_product_permission
@@ -14,23 +15,6 @@ import json
 from apps.finance.models import Transaction, FinanceOutcome
 
 
-class BasePagination(PageNumberPagination):
-    page_size = 10
-    page_size_query_param = 'page_size'
-    max_page_size = 1000
-
-    def get_paginated_response(self, data):
-        return Response({
-            "current": self.page.number,
-            "pageSize": self.page.paginator.per_page,
-            "total": self.page.paginator.count,
-            "next": self.get_next_link(),
-            "previous": self.get_previous_link(),
-            "results": data
-        })
-
-class CustomPaginationMixin:
-    pagination_class = BasePagination
 
 # Product Delete Manager
 class ProductDeleteManagerAPI(APIView):
@@ -249,9 +233,8 @@ class AllCategoryViewSet(ModelViewSet):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-
 class ProductViewSet(viewsets.ModelViewSet):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
     serializer_class = ProductSerializer
     pagination_class = BasePagination
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
@@ -259,8 +242,8 @@ class ProductViewSet(viewsets.ModelViewSet):
     search_fields = ("protype__name", "action_type", "storage_date", "storage_count")
 
     def get_queryset(self):
-        # company_id = 1
-        company_id = self.request.user.company_id
+        company_id = 1
+        # company_id = self.request.user.company_id
         queryset = Product.objects.filter(company_id=company_id).order_by('-id')
         return queryset
 
@@ -483,8 +466,9 @@ class StorageViewSet(viewsets.ModelViewSet):
         instance.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
-class StorageProductViewSet(CustomPaginationMixin, viewsets.ModelViewSet):
+class StorageProductViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
+    pagination_class = BasePagination
     serializer_class = StorageProductSerializer
     def get_queryset(self):
         company_id = self.request.user.company_id
@@ -536,7 +520,6 @@ def parse_date(date_str = None):
 
 class StorageProductCreate(APIView):
     permission_classes = [IsAuthenticated]
-
     def get(self, request):
         company_id = request.user.company_id
         products = Product.objects.select_related('format', 'category').prefetch_related('storage_products').filter(
@@ -579,12 +562,17 @@ class StorageProductCreate(APIView):
 
             for item in data:
                 if "cash" in item or "card" in item or "other_pay" in item or "desc" in item:
+                    cash= item.get("cash", 0)
+                    card= item.get("card", 0)
+                    other_pay= item.get("other_pay", 0)
+                    total = cash+card+other_pay
                     finance_outcome_data = {
                         "user": request.user,
                         "supplier": supplier,
                         "cash": item.get("cash", 0),
                         "card": item.get("card", 0),
                         "other_pay": item.get("other_pay", 0),
+                        "total": item.get("total",total),
                         "desc": item.get("desc", ""),
                         "deadline":item.get("deadline"),
                         "company_id": company_id
@@ -671,15 +659,20 @@ class StorageProductCreate(APIView):
 
                     # Create one FinanceOutcome for all StorageProducts
                     finance_outcome = FinanceOutcome.objects.create(**finance_outcome_data)
-
                     # Associate the FinanceOutcome with each StorageProduct
+                    total=0
                     for storage_product in storage_products:
+                        total+=(storage_product.price*storage_product.storage_count)
                         storage_product.finance_outcome = finance_outcome
                         storage_product.save()
+                    finance_outcome.total=total
+                    finance_outcome.save()
 
             except ObjectDoesNotExist:
                 return Response({"error": "Transaction type 'ombor' with action 'chiqim' does not exist"},
                                 status=status.HTTP_400_BAD_REQUEST)
+            except Exception as e:
+                return Response({"error": str(e.args)},status=status.HTTP_400_BAD_REQUEST)
 
             return Response({"status": "ok"}, status=status.HTTP_201_CREATED)
 

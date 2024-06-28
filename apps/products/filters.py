@@ -9,11 +9,9 @@ class ProductFilter(django_filters.FilterSet):
     price__lte = django_filters.NumberFilter(field_name="price", lookup_expr='lte')
     category_id = django_filters.NumberFilter(field_name="category_id", lookup_expr='exact')
     format_id = django_filters.NumberFilter(field_name="format_id", lookup_expr='exact')
-    bar_code = django_filters.CharFilter(field_name="bar_code", lookup_expr='icontains')
-
     class Meta:
         model = Product
-        fields = ['product_type', 'price__gte', 'price__lte', 'category_id', 'format_id', 'bar_code']
+        fields = ['product_type', 'price__gte', 'price__lte', 'category_id', 'format_id']
 
     def filter_by_product_type(self, queryset, name, value):
         product_types = value.split(',')
