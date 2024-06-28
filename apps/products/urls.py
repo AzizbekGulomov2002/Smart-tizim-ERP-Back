@@ -3,13 +3,15 @@ from rest_framework.routers import DefaultRouter
 
 from apps.products.views import CategoryViewSet, ProductViewSet, SupplierViewSet, StorageViewSet, \
     StorageProductViewSet, ProductDeleteManagerAPI, FormatViewSet, ProductCreateAPIView, StorageProductCreate, \
-    StorageProductOffViewSet, ALlProductViewSet
+    StorageProductOffViewSet, ALlProductViewSet, AllFormatViewSet, AllCategoryViewSet
 
 router = DefaultRouter()
 router.register(r'categories', CategoryViewSet, basename='categories')
+router.register(r'all_categories', AllCategoryViewSet, basename='all_categories')
 router.register(r'products', ProductViewSet, basename='products')
 router.register(r'all_products', ALlProductViewSet, basename='all_products')
 router.register(r'formats', FormatViewSet, basename='formats')
+router.register(r'all_formats', AllFormatViewSet, basename='all_formats')
 router.register(r'suppliers', SupplierViewSet, basename='suppliers')
 router.register(r'storages', StorageViewSet, basename='storages')
 router.register(r'storage_products', StorageProductViewSet, basename='storage_products')

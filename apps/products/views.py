@@ -7,7 +7,7 @@ from rest_framework.permissions import IsAuthenticated,AllowAny
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 from apps.trade.views import CustomPaginationMixin, BasePagination
-from .filters import ProductFilter
+from .filters import ProductFilter, FormatFilter, CategoryFilter
 from .models import StorageProductOff
 from .serializers import  *
 from .decorator import is_storage_permission, is_product_permission
@@ -69,9 +69,58 @@ class ProductDeleteManagerAPI(APIView):
         return Response({"status":'ok'})
 
 
-class FormatViewSet(ModelViewSet):
+class AllFormatViewSet(ModelViewSet):
     permission_classes = [IsAuthenticated]
     serializer_class = FormatSerializer
+    filter_backends = [DjangoFilterBackend, filters.OrderingFilter, filters.SearchFilter]
+    filterset_class = FormatFilter
+    ordering_fields = ['name']
+    search_fields = ['name']
+
+    def get_queryset(self):
+        company_id = self.request.user.company_id
+        queryset = Format.objects.filter(company_id=company_id)
+        return queryset
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
+    def retrieve(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save(company_id=request.user.company_id)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_400_BAD_REQUEST)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        instance.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class FormatViewSet(ModelViewSet):
+    permission_classes = [IsAuthenticated]
+    pagination_class = BasePagination
+    serializer_class = FormatSerializer
+    filter_backends = [DjangoFilterBackend, filters.OrderingFilter, filters.SearchFilter]
+    filterset_class = FormatFilter
+    ordering_fields = ['name']
+    search_fields = ['name']
     def get_queryset(self):
         company_id = self.request.user.company_id
         queryset = Format.objects.filter(company_id=company_id)
@@ -105,7 +154,54 @@ class FormatViewSet(ModelViewSet):
 
 class CategoryViewSet(ModelViewSet):
     permission_classes= [IsAuthenticated]
+    pagination_class = BasePagination
     serializer_class = CategorySerializer
+    filter_backends = [DjangoFilterBackend, filters.OrderingFilter, filters.SearchFilter]
+    filterset_class = CategoryFilter
+    ordering_fields = ['name']
+    search_fields = ['name']
+    def get_queryset(self):
+        company_id = self.request.user.company_id
+        queryset = Category.objects.filter(company_id=company_id)
+        return queryset
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance)
+        return Response(serializer.data)
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save(company_id=request.user.company_id)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        instance.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+class AllCategoryViewSet(ModelViewSet):
+    permission_classes= [IsAuthenticated]
+    serializer_class = CategorySerializer
+    filter_backends = [DjangoFilterBackend, filters.OrderingFilter, filters.SearchFilter]
+    filterset_class = CategoryFilter
+    ordering_fields = ['name']
+    search_fields = ['name']
     def get_queryset(self):
         company_id = self.request.user.company_id
         queryset = Category.objects.filter(company_id=company_id)
@@ -142,8 +238,9 @@ class CategoryViewSet(ModelViewSet):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
+
 class ProductViewSet(viewsets.ModelViewSet):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
     serializer_class = ProductSerializer
     pagination_class = BasePagination
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
@@ -233,7 +330,6 @@ class ALlProductViewSet(viewsets.ModelViewSet):
         instance = self.get_object()
         instance.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
-
 
 
 class ProductCreateAPIView(APIView):
