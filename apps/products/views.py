@@ -118,12 +118,20 @@ class FormatViewSet(ModelViewSet):
     filterset_class = FormatFilter
     ordering_fields = ['name']
     search_fields = ['name']
+
     def get_queryset(self):
+        # company_id = 1
         company_id = self.request.user.company_id
         queryset = Format.objects.filter(company_id=company_id)
         return queryset
+
+    # Optionally, you can override the list method to handle pagination explicitly
     def list(self, request, *args, **kwargs):
-        queryset = self.get_queryset()
+        queryset = self.filter_queryset(self.get_queryset())
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
     def retrieve(self, request, *args, **kwargs):
@@ -150,20 +158,26 @@ class FormatViewSet(ModelViewSet):
     
 
 class CategoryViewSet(ModelViewSet):
-    permission_classes= [IsAuthenticated]
+    permission_classes = [IsAuthenticated]
     pagination_class = BasePagination
     serializer_class = CategorySerializer
     filter_backends = [DjangoFilterBackend, filters.OrderingFilter, filters.SearchFilter]
-    filterset_class = CategoryFilter
+    filterset_class = CategoryFilter  # Assuming you have defined CategoryFilter
     ordering_fields = ['name']
     search_fields = ['name']
+
     def get_queryset(self):
+        # company_id = 1
         company_id = self.request.user.company_id
         queryset = Category.objects.filter(company_id=company_id)
         return queryset
 
     def list(self, request, *args, **kwargs):
-        queryset = self.get_queryset()
+        queryset = self.filter_queryset(self.get_queryset())
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
 
