@@ -142,10 +142,8 @@ class CategoryViewSet(ModelViewSet):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-
-
 class ProductViewSet(viewsets.ModelViewSet):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
     serializer_class = ProductSerializer
     pagination_class = BasePagination
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
@@ -153,7 +151,8 @@ class ProductViewSet(viewsets.ModelViewSet):
     search_fields = ("protype__name", "action_type", "storage_date", "storage_count")
 
     def get_queryset(self):
-        company_id = self.request.user.company_id
+        company_id = 1
+        # company_id = self.request.user.company_id
         queryset = Product.objects.filter(company_id=company_id).order_by('-id')
         return queryset
 
@@ -189,6 +188,57 @@ class ProductViewSet(viewsets.ModelViewSet):
         instance.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
+
+
+
+class ALlProductViewSet(viewsets.ModelViewSet):
+    permission_classes = [AllowAny]
+    serializer_class = ProductSerializer
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter]
+    filterset_class = ProductFilter
+    search_fields = ("protype__name", "action_type", "storage_date", "storage_count")
+
+    def get_queryset(self):
+        company_id = 1
+        # company_id = self.request.user.company_id
+        queryset = Product.objects.filter(company_id=company_id).order_by('-id')
+        return queryset
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+        page = self.paginate_queryset(queryset)
+
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance)
+        return Response(serializer.data)
+
+    def create(self, request, *args, **kwargs):
+        return Response(status=status.HTTP_400_BAD_REQUEST)
+
+    def update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        instance.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+
+
 class ProductCreateAPIView(APIView):
     permission_classes = [IsAuthenticated]
     def get(self, request):
@@ -215,7 +265,7 @@ class ProductCreateAPIView(APIView):
             price = item.get("price")
             category_id = item.get("category_id")
             format_id = item.get("format_id")
-            product_type = item.get("product_type", 'Sanaladigan')
+            product_type = item.get("product_type")
             bar_code = item.get("bar_code", "")
             if not name or not price or not category_id or not format_id:
                 return Response(

@@ -2,11 +2,13 @@ from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 
 from apps.products.views import CategoryViewSet, ProductViewSet, SupplierViewSet, StorageViewSet, \
-    StorageProductViewSet, ProductDeleteManagerAPI, FormatViewSet, ProductCreateAPIView, StorageProductCreate,StorageProductOffViewSet
+    StorageProductViewSet, ProductDeleteManagerAPI, FormatViewSet, ProductCreateAPIView, StorageProductCreate, \
+    StorageProductOffViewSet, ALlProductViewSet
 
 router = DefaultRouter()
 router.register(r'categories', CategoryViewSet, basename='categories')
 router.register(r'products', ProductViewSet, basename='products')
+router.register(r'all_products', ALlProductViewSet, basename='all_products')
 router.register(r'formats', FormatViewSet, basename='formats')
 router.register(r'suppliers', SupplierViewSet, basename='suppliers')
 router.register(r'storages', StorageViewSet, basename='storages')
