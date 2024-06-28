@@ -1,9 +1,6 @@
 from django.core.exceptions import ObjectDoesNotExist
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import viewsets, status, filters
-from django.core.exceptions import ObjectDoesNotExist
-from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import viewsets, status, filters
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticated,AllowAny
 from rest_framework.response import Response
@@ -240,7 +237,7 @@ class AllCategoryViewSet(ModelViewSet):
 
 
 class ProductViewSet(viewsets.ModelViewSet):
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticated]
     serializer_class = ProductSerializer
     pagination_class = BasePagination
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]

@@ -1,5 +1,5 @@
 import django_filters
-from apps.products.models import Product
+from apps.products.models import Product, Category, Format
 from django.db.models import Q
 
 
@@ -21,3 +21,16 @@ class ProductFilter(django_filters.FilterSet):
         for product_type in product_types:
             query |= Q(product_type=product_type)
         return queryset.filter(query)
+
+
+class CategoryFilter(django_filters.FilterSet):
+    name = django_filters.CharFilter(field_name="name", lookup_expr='icontains')
+    class Meta:
+        model = Category
+        fields = ['name']
+
+class FormatFilter(django_filters.FilterSet):
+    name = django_filters.CharFilter(field_name="name", lookup_expr='icontains')
+    class Meta:
+        model = Format
+        fields = ['name']
