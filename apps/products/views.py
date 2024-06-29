@@ -63,36 +63,6 @@ class AllFormatViewSet(ModelViewSet):
         queryset = Format.objects.filter(company_id=company_id)
         return queryset
 
-    def list(self, request, *args, **kwargs):
-        queryset = self.get_queryset()
-        serializer = self.get_serializer(queryset, many=True)
-        return Response(serializer.data)
-
-    def retrieve(self, request, *args, **kwargs):
-        queryset = self.get_queryset()
-        serializer = self.get_serializer(queryset, many=True)
-        return Response(serializer.data)
-
-    def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save(company_id=request.user.company_id)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    def update(self, request, *args, **kwargs):
-        instance = self.get_object()
-        serializer = self.get_serializer(instance, data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_400_BAD_REQUEST)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    def destroy(self, request, *args, **kwargs):
-        instance = self.get_object()
-        instance.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
-
 
 class FormatViewSet(ModelViewSet):
     permission_classes = [IsAuthenticated]
@@ -202,36 +172,6 @@ class AllCategoryViewSet(ModelViewSet):
         queryset = Category.objects.filter(company_id=company_id)
         return queryset
 
-    def list(self, request, *args, **kwargs):
-        queryset = self.get_queryset()
-        serializer = self.get_serializer(queryset, many=True)
-        return Response(serializer.data)
-
-    def retrieve(self, request, *args, **kwargs):
-        instance = self.get_object()
-        serializer = self.get_serializer(instance)
-        return Response(serializer.data)
-
-    def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save(company_id=request.user.company_id)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    def update(self, request, *args, **kwargs):
-        instance = self.get_object()
-        serializer = self.get_serializer(instance, data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    def destroy(self, request, *args, **kwargs):
-        instance = self.get_object()
-        instance.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
-
 
 class ProductViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
@@ -288,42 +228,10 @@ class ALlProductViewSet(viewsets.ModelViewSet):
     search_fields = ("protype__name", "action_type", "storage_date", "storage_count")
 
     def get_queryset(self):
-        # company_id = 1
         company_id = self.request.user.company_id
         queryset = Product.objects.filter(company_id=company_id).order_by('-id')
         return queryset
 
-    def list(self, request, *args, **kwargs):
-        queryset = self.filter_queryset(self.get_queryset())
-        page = self.paginate_queryset(queryset)
-
-        if page is not None:
-            serializer = self.get_serializer(page, many=True)
-            return self.get_paginated_response(serializer.data)
-
-        serializer = self.get_serializer(queryset, many=True)
-        return Response(serializer.data)
-
-    def retrieve(self, request, *args, **kwargs):
-        instance = self.get_object()
-        serializer = self.get_serializer(instance)
-        return Response(serializer.data)
-
-    def create(self, request, *args, **kwargs):
-        return Response(status=status.HTTP_400_BAD_REQUEST)
-
-    def update(self, request, *args, **kwargs):
-        instance = self.get_object()
-        serializer = self.get_serializer(instance, data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    def destroy(self, request, *args, **kwargs):
-        instance = self.get_object()
-        instance.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class ProductCreateAPIView(APIView):
@@ -344,49 +252,50 @@ class ProductCreateAPIView(APIView):
     def post(self, request):
         company_id = request.user.company_id
         data = request.data
-        if not isinstance(data, list):
-            return Response({"error": "Expected a list of items."}, status=status.HTTP_400_BAD_REQUEST)
-        created_products = []
+        # Check if data is a single object (dict)
+        if isinstance(data, dict):
+            data = [data]  # Convert single object to a list for processing
+        created_products = {}
+        errors = {}
         for item in data:
             name = item.get("name")
             price = item.get("price")
             category_id = item.get("category_id")
             format_id = item.get("format_id")
-            # product_type = item.get("product_type", 'Sanaladigan')
             product_type = item.get("product_type")
             bar_code = item.get("bar_code", "")
-            if not name or not price or not category_id or not format_id:
-                return Response(
-                    {"error": "name, price, category_id, and format_id are required for each product."},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
+            if not all([name, price, category_id, format_id]):
+                errors.update({"error": "name, price, category_id, and format_id are required for each product."})
+                continue
             try:
-                Category.objects.get(company_id=company_id, id=category_id)
+                category = Category.objects.get(company_id=company_id, id=category_id)
             except Category.DoesNotExist:
-                return Response(
-                    {"error": f"Invalid category_id {category_id} for the given company."},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
+                errors.update({"error": f"Invalid category_id {category_id} for the given company."})
+                continue
             try:
-                Format.objects.get(company_id=company_id, id=format_id)
+                format = Format.objects.get(company_id=company_id, id=format_id)
             except Format.DoesNotExist:
-                return Response(
-                    {"error": f"Invalid format_id {format_id} for the given company."},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
+                errors.update({"error": f"Invalid format_id {format_id} for the given company."})
+                continue
             # Create the product
-            product = Product.objects.create(
+            product = Product(
                 name=name,
                 company_id=company_id,
                 product_type=product_type,
-                category_id=category_id,
-                format_id=format_id,
+                category=category,
+                format=format,
                 price=price,
-                bar_code=item.get("bar_code", ""),  # Handle bar_code if provided
+                bar_code=bar_code,
             )
-            created_products.append(product)
-        serializer = ProductSerializer(created_products, many=True)
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+            product.save()
+            created_products.update({product.id: ProductSerializer(product).data})
+
+        if errors:
+            return Response(errors, status=status.HTTP_400_BAD_REQUEST)
+
+        return Response(created_products, status=status.HTTP_201_CREATED)
+
+
 
 class SupplierViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
