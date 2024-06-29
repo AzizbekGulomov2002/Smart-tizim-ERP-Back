@@ -9,7 +9,7 @@ class ProductFilter(django_filters.FilterSet):
     price__gte = django_filters.NumberFilter(field_name="price", lookup_expr='gte')
     price__lte = django_filters.NumberFilter(field_name="price", lookup_expr='lte')
     category_id = django_filters.CharFilter(method='filter_by_category_id')
-    format_id = django_filters.NumberFilter(field_name="format_id", lookup_expr='exact')
+    format_id = django_filters.CharFilter(method='filter_by_format_id')
 
     class Meta:
         model = Product
@@ -25,6 +25,10 @@ class ProductFilter(django_filters.FilterSet):
     def filter_by_category_id(self, queryset, name, value):
         category_ids = value.split(',')
         return queryset.filter(category_id__in=category_ids)
+
+    def filter_by_format_id(self, queryset, name, value):
+        format_ids = value.split(',')
+        return queryset.filter(format_id__in=format_ids)
 
 
 class CategoryFilter(django_filters.FilterSet):
