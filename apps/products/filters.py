@@ -4,6 +4,7 @@ from django.db.models import Q
 
 
 class ProductFilter(django_filters.FilterSet):
+    name = django_filters.CharFilter(field_name='name', lookup_expr='icontains')
     product_type = django_filters.CharFilter(method='filter_by_product_type')
     price__gte = django_filters.NumberFilter(field_name="price", lookup_expr='gte')
     price__lte = django_filters.NumberFilter(field_name="price", lookup_expr='lte')
@@ -11,7 +12,7 @@ class ProductFilter(django_filters.FilterSet):
     format_id = django_filters.NumberFilter(field_name="format_id", lookup_expr='exact')
     class Meta:
         model = Product
-        fields = ['product_type', 'price__gte', 'price__lte', 'category_id', 'format_id']
+        fields = ['name','product_type', 'price__gte', 'price__lte', 'category_id', 'format_id']
 
     def filter_by_product_type(self, queryset, name, value):
         product_types = value.split(',')
