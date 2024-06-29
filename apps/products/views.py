@@ -352,7 +352,8 @@ class ProductCreateAPIView(APIView):
             price = item.get("price")
             category_id = item.get("category_id")
             format_id = item.get("format_id")
-            product_type = item.get("product_type", 'Sanaladigan')
+            # product_type = item.get("product_type", 'Sanaladigan')
+            product_type = item.get("product_type")
             bar_code = item.get("bar_code", "")
             if not name or not price or not category_id or not format_id:
                 return Response(
@@ -381,12 +382,11 @@ class ProductCreateAPIView(APIView):
                 category_id=category_id,
                 format_id=format_id,
                 price=price,
-                bar_code=bar_code,
+                bar_code=item.get("bar_code", ""),  # Handle bar_code if provided
             )
             created_products.append(product)
         serializer = ProductSerializer(created_products, many=True)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
-
 
 class SupplierViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
