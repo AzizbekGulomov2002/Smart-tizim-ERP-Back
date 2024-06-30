@@ -3,7 +3,7 @@ from rest_framework.routers import DefaultRouter
 
 from apps.products.views import CategoryViewSet, ProductViewSet, SupplierViewSet, StorageViewSet, \
     StorageProductViewSet, ProductDeleteManagerAPI, FormatViewSet, ProductCreateAPIView, StorageProductCreate, \
-    StorageProductOffViewSet, ALlProductViewSet, AllFormatViewSet, AllCategoryViewSet
+    StorageProductOffViewSet, ALlProductViewSet, AllFormatViewSet, AllCategoryViewSet,ProductImportView
 
 router = DefaultRouter()
 router.register(r'categories', CategoryViewSet, basename='categories')
