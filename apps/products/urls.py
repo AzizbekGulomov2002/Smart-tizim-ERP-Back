@@ -25,4 +25,6 @@ urlpatterns = [
     path('storage_product_create/',StorageProductCreate.as_view()),
     path('delete_products/', ProductDeleteManagerAPI.as_view(), name='delete_products'), 
     path('product_create/', ProductCreateAPIView.as_view(), name='product_creates'),
+    path('import_products/', ProductImportView.as_view(), name='import_products'),
+
 ]

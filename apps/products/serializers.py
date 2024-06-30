@@ -21,7 +21,8 @@ class ProductSerializer(serializers.ModelSerializer):
         fields = ['id','name','product_type', "category",'price','format','bar_code', 'storage_products','current_total_count'] # <  qoganlari ozgarsaham  storage_products   shu ozgarmasin
         depth = 1
 
-
+class ProductImportSerializer(serializers.Serializer):
+    file = serializers.FileField()
 
 class StorageSerializer(serializers.ModelSerializer):
     class Meta:

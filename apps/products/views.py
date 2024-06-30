@@ -4,7 +4,8 @@ from rest_framework import viewsets, status, filters
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
-
+from openpyxl import load_workbook
+from django.db import transaction
 from apps.app.views import BasePagination
 from apps.products.filters import ProductFilter, FormatFilter, CategoryFilter
 from apps.products.serializers import  *
@@ -232,6 +233,42 @@ class ALlProductViewSet(viewsets.ModelViewSet):
         queryset = Product.objects.filter(company_id=company_id).order_by('-id')
         return queryset
 
+
+class ProductImportView(APIView):
+    def post(self, request, *args, **kwargs):
+        company_id = request.user.company_id
+        serializer = ProductImportSerializer(data=request.data)
+        if serializer.is_valid():
+            file = serializer.validated_data['file']
+            try:
+                workbook = load_workbook(file)
+                sheet = workbook.active
+                with transaction.atomic():
+                    for row in sheet.iter_rows(min_row=2, values_only=True):
+
+                        category_name = row[0]
+                        format_name = row[1]
+                        product_name = row[2]
+                        product_type = row[3]
+                        price = int(row[4])
+                        bar_code = row[5] if row[5] else None
+
+                        category, _ = Category.objects.get_or_create(name=category_name)
+                        format, _ = Format.objects.get_or_create(name=format_name)
+
+                        Product.objects.create(
+                            company_id=company_id,
+                            name=product_name,
+                            product_type=product_type,
+                            category=category,
+                            format=format,
+                            price=price,
+                            bar_code=bar_code
+                        )
+                return Response({"success": "Products imported successfully."}, status=status.HTTP_201_CREATED)
+            except Exception as e:
+                return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class ProductCreateAPIView(APIView):
