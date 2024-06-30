@@ -14,6 +14,16 @@ class StorageProductSerializer(serializers.ModelSerializer):
         model = StorageProduct
         # fields = ["id","storage_count"]
         fields = "__all__"
+    
+class StorageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Storage
+        fields = '__all__'
+
+class  FormatSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Format
+        fields = "__all__"
 
 class ProductSerializer(serializers.ModelSerializer):
     category = CategorySerializer(read_only=True)
@@ -36,15 +46,7 @@ class ProductSerializer(serializers.ModelSerializer):
 class ProductImportSerializer(serializers.Serializer):
     file = serializers.FileField()
 
-class StorageSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Storage
-        fields = '__all__'
 
-class  FormatSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Format
-        fields = "__all__"
 
 class SupplierSerializer(serializers.ModelSerializer):
     class Meta:
