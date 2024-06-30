@@ -225,7 +225,6 @@ class ProductImportView(APIView):
 
         if serializer.is_valid():
             file = serializer.validated_data['file']
-
             try:
                 workbook = load_workbook(file)
                 sheet = workbook.active
@@ -239,14 +238,25 @@ class ProductImportView(APIView):
                         product_type = row[3]
                         price = int(row[4])
                         bar_code = row[5] if row[5] else None
-                        storage_id = row[6] if row[6] else None
+                        storage_name = row[6] if row[6] else None  # Assuming storage name is in column 7
 
-                        category, _ = Category.objects.get_or_create(name=category_name, company_id=company_id)
-                        format, _ = Format.objects.get_or_create(name=format_name, company_id=company_id)
+                        # Check if category exists
+                        category, category_created = Category.objects.get_or_create(name=category_name, company_id=company_id)
+                        if category_created:
+                            raise ValueError(f"Kategoriya '{category_name}' mavjud emas")
 
-                        storage = None
-                        if storage_id:
-                            storage = Storage.objects.get(id=storage_id, company_id=company_id)
+                        # Check if format exists
+                        format, format_created = Format.objects.get_or_create(name=format_name, company_id=company_id)
+                        if format_created:
+                            raise ValueError(f"Format '{format_name}' mavjud emas")
+
+                        # Check if storage exists
+                        if storage_name:
+                            storage, storage_created = Storage.objects.get_or_create(name=storage_name, company_id=company_id)
+                            if storage_created:
+                                raise ValueError(f"Ombor: '{storage_name}' bu {company_id} korxonada mavjud emas ")
+                        else:
+                            storage = None
 
                         product = Product.objects.create(
                             company_id=company_id,
@@ -262,14 +272,19 @@ class ProductImportView(APIView):
                         imported_products.append(ProductSerializer(product).data)
 
                 return Response({
-                    "success": "Products imported successfully",
+                    "success": "Mahsulotlar mucaffaqiyatli import qilindi",
                     "products": imported_products
                 }, status=status.HTTP_201_CREATED)
+
+            except ValueError as ve:
+                return Response({"error": str(ve)}, status=status.HTTP_400_BAD_REQUEST)
 
             except Exception as e:
                 return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
 
 
 class ALlProductViewSet(viewsets.ModelViewSet):
