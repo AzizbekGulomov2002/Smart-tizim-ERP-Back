@@ -221,18 +221,6 @@ class ProductViewSet(viewsets.ModelViewSet):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-class ALlProductViewSet(viewsets.ModelViewSet):
-    permission_classes = [IsAuthenticated]
-    serializer_class = ProductSerializer
-    filter_backends = [DjangoFilterBackend, filters.SearchFilter]
-    filterset_class = ProductFilter
-    search_fields = ("protype__name", "action_type", "storage_date", "storage_count")
-
-    def get_queryset(self):
-        company_id = self.request.user.company_id
-        queryset = Product.objects.filter(company_id=company_id).order_by('-id')
-        return queryset
-
 
 class ProductImportView(APIView):
     def post(self, request, *args, **kwargs):
@@ -265,35 +253,55 @@ class ProductImportView(APIView):
                             price=price,
                             bar_code=bar_code
                         )
-                return Response({"success": "Products imported successfully."}, status=status.HTTP_201_CREATED)
+                return Response({"success": "Mahsulotlar muvaffaqiyatli import qilindi"}, status=status.HTTP_201_CREATED)
             except Exception as e:
                 return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+class ALlProductViewSet(viewsets.ModelViewSet):
+    permission_classes = [IsAuthenticated]
+    serializer_class = ProductSerializer
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter]
+    filterset_class = ProductFilter
+    search_fields = ("protype__name", "action_type", "storage_date", "storage_count")
+
+    def get_queryset(self):
+        company_id = self.request.user.company_id
+        queryset = Product.objects.filter(company_id=company_id).order_by('-id')
+        return queryset
+
+
 
 class ProductCreateAPIView(APIView):
     permission_classes = [IsAuthenticated]
+
     def get(self, request):
         company_id = request.user.company_id
         products = Product.objects.filter(company_id=company_id)
         categories = Category.objects.filter(company_id=company_id)
         formats = Format.objects.filter(company_id=company_id)
+
         product_serializer = ProductSerializer(products, many=True)
         category_serializer = CategorySerializer(categories, many=True)
         format_serializer = FormatSerializer(formats, many=True)
+
         return Response({
             "products": product_serializer.data,
             "categories": category_serializer.data,
             "formats": format_serializer.data
         })
+
     def post(self, request):
         company_id = request.user.company_id
         data = request.data
-        # Check if data is a single object (dict)
+
+        # Ensure data is treated as a list for consistent processing
         if isinstance(data, dict):
-            data = [data]  # Convert single object to a list for processing
+            data = [data]
+
         created_products = {}
         errors = {}
+
         for item in data:
             name = item.get("name")
             price = item.get("price")
@@ -301,19 +309,23 @@ class ProductCreateAPIView(APIView):
             format_id = item.get("format_id")
             product_type = item.get("product_type")
             bar_code = item.get("bar_code", "")
+
             if not all([name, price, category_id, format_id]):
-                errors.update({"error": "name, price, category_id, and format_id are required for each product."})
+                errors.update({"error": "name, price, category_id, and format_id har bir mahsulot uchun berilishi zarur"})
                 continue
+
             try:
                 category = Category.objects.get(company_id=company_id, id=category_id)
             except Category.DoesNotExist:
-                errors.update({"error": f"Invalid category_id {category_id} for the given company."})
+                errors.update({"error": f"Noto'g'ri category_id {category_id} for the given company."})
                 continue
+
             try:
                 format = Format.objects.get(company_id=company_id, id=format_id)
             except Format.DoesNotExist:
-                errors.update({"error": f"Invalid format_id {format_id} for the given company."})
+                errors.update({"error": f"Noto'g'ri format_id {format_id} for the given company."})
                 continue
+
             # Create the product
             product = Product(
                 name=name,
@@ -328,9 +340,15 @@ class ProductCreateAPIView(APIView):
             created_products.update({product.id: ProductSerializer(product).data})
 
         if errors:
-            return Response(errors, status=status.HTTP_400_BAD_REQUEST)
+            return Response({
+                "message": "Errors encountered while processing your request.",
+                "details": errors
+            }, status=status.HTTP_400_BAD_REQUEST)
 
-        return Response(created_products, status=status.HTTP_201_CREATED)
+        return Response({
+            "message": "Products created successfully.",
+            "products": created_products
+        }, status=status.HTTP_201_CREATED)
 
 
 
