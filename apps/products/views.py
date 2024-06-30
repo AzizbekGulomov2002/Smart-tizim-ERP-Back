@@ -217,41 +217,60 @@ class ProductViewSet(viewsets.ModelViewSet):
         instance.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
+
 class ProductImportView(APIView):
     def post(self, request, *args, **kwargs):
         company_id = request.user.company_id
         serializer = ProductImportSerializer(data=request.data)
+
         if serializer.is_valid():
             file = serializer.validated_data['file']
+
             try:
                 workbook = load_workbook(file)
                 sheet = workbook.active
+                imported_products = []
+
                 with transaction.atomic():
                     for row in sheet.iter_rows(min_row=2, values_only=True):
-
                         category_name = row[0]
                         format_name = row[1]
                         product_name = row[2]
                         product_type = row[3]
                         price = int(row[4])
                         bar_code = row[5] if row[5] else None
+                        storage_id = row[6] if row[6] else None
 
-                        category, _ = Category.objects.get_or_create(name=category_name)
-                        format, _ = Format.objects.get_or_create(name=format_name)
+                        category, _ = Category.objects.get_or_create(name=category_name, company_id=company_id)
+                        format, _ = Format.objects.get_or_create(name=format_name, company_id=company_id)
 
-                        Product.objects.create(
+                        storage = None
+                        if storage_id:
+                            storage = Storage.objects.get(id=storage_id, company_id=company_id)
+
+                        product = Product.objects.create(
                             company_id=company_id,
                             name=product_name,
                             product_type=product_type,
                             category=category,
                             format=format,
                             price=price,
-                            bar_code=bar_code
+                            bar_code=bar_code,
+                            storage=storage
                         )
-                return Response({"success": "Mahsulotlar muvaffaqiyatli import qilindi"}, status=status.HTTP_201_CREATED)
+
+                        imported_products.append(ProductSerializer(product).data)
+
+                return Response({
+                    "success": "Products imported successfully",
+                    "products": imported_products
+                }, status=status.HTTP_201_CREATED)
+
             except Exception as e:
                 return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 class ALlProductViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]

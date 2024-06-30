@@ -6,12 +6,17 @@ class CategoryAdmin(admin.ModelAdmin):
     list_display = ('name',)
 
 
-admin.site.register(Supplier)
-admin.site.register(Format)
+@admin.register(Supplier)
+class SupplierAdmin(admin.ModelAdmin):
+    list_display = ('id','name','supplier_type')
+
+@admin.register(Format)
+class FormatAdmin(admin.ModelAdmin):
+    list_display = ('id','name',)
 
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
-    list_display = ('id', 'name', 'price', 'product_type','current_total_count')
+    list_display = ('id','storage','category', 'name', 'price', 'product_type','current_total_count')
 
 @admin.register(StorageProduct)
 class StorageProductAdmin(admin.ModelAdmin):
