@@ -15,28 +15,11 @@ class StorageProductSerializer(serializers.ModelSerializer):
         # fields = ["id","storage_count"]
         fields = "__all__"
 
-# class ProductSerializer(serializers.ModelSerializer):
-#     class Meta:
-#         model = Product
-#         fields = ['id','name','product_type', "category",'price','format','bar_code', 'storage_products','current_total_count'] # <  qoganlari ozgarsaham  storage_products   shu ozgarmasin
-#         depth = 1
-
-
 class ProductSerializer(serializers.ModelSerializer):
-    category_id = serializers.PrimaryKeyRelatedField(queryset=Category.objects.all(), source='category', write_only=True)
-    format_id = serializers.PrimaryKeyRelatedField(queryset=Format.objects.all(), source='format', write_only=True)
-    category = serializers.StringRelatedField()
-    format = serializers.StringRelatedField()
-
     class Meta:
         model = Product
-        fields = ['id', 'name', 'product_type', 'category', 'category_id', 'price', 'format', 'format_id', 'bar_code', 'storage_products', 'current_total_count']
+        fields = ['id','name','product_type', "category",'price','format','bar_code', 'storage_products','current_total_count'] # <  qoganlari ozgarsaham  storage_products   shu ozgarmasin
         depth = 1
-
-    def update(self, instance, validated_data):
-        instance.category = validated_data.get('category', instance.category)
-        instance.format = validated_data.get('format', instance.format)
-        return super().update(instance, validated_data)
 
 class ProductImportSerializer(serializers.Serializer):
     file = serializers.FileField()

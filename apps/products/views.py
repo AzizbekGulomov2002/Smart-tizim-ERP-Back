@@ -176,7 +176,7 @@ class ProductViewSet(viewsets.ModelViewSet):
     pagination_class = BasePagination
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
     filterset_class = ProductFilter
-    search_fields = ("category__name", "format__name", "name", "bar_code", "price")
+    search_fields = ("category__name","format__name","name", "bar_code","price")
 
     def get_queryset(self):
         company_id = self.request.user.company_id
@@ -202,15 +202,12 @@ class ProductViewSet(viewsets.ModelViewSet):
         return Response(status=status.HTTP_400_BAD_REQUEST)
 
     def update(self, request, *args, **kwargs):
-        partial = kwargs.pop('partial', False)
         instance = self.get_object()
-        serializer = self.get_serializer(instance, data=request.data, partial=partial)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response(serializer.data)
-
-    def partial_update(self, request, *args, **kwargs):
-        return self.update(request, *args, partial=True)
+        serializer = self.get_serializer(instance, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
