@@ -16,10 +16,22 @@ class StorageProductSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 class ProductSerializer(serializers.ModelSerializer):
+    category = CategorySerializer(read_only=True)
+    format = FormatSerializer(read_only=True)
+    category_id = serializers.PrimaryKeyRelatedField(queryset=Category.objects.all(), source='category', write_only=True)
+    format_id = serializers.PrimaryKeyRelatedField(queryset=Format.objects.all(), source='format', write_only=True)
+
     class Meta:
         model = Product
-        fields = ['id','name','product_type', "category",'price','format','bar_code', 'storage_products','current_total_count'] # <  qoganlari ozgarsaham  storage_products   shu ozgarmasin
+        fields = ['id', 'name', 'product_type', 'category', 'category_id', 'price', 'format', 'format_id', 'bar_code', 'storage_products', 'current_total_count']
         depth = 1
+
+    def update(self, instance, validated_data):
+        if 'category' in validated_data:
+            instance.category = validated_data.pop('category')
+        if 'format' in validated_data:
+            instance.format = validated_data.pop('format')
+        return super().update(instance, validated_data)
 
 class ProductImportSerializer(serializers.Serializer):
     file = serializers.FileField()
