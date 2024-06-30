@@ -29,7 +29,7 @@ class StorageSerializer(serializers.ModelSerializer):
         model = Storage
         fields = '__all__'
 
-class  FormatSerializer (serializers.ModelSerializer):
+class  FormatSerializer(serializers.ModelSerializer):
     class Meta:
         model = Format
         fields = "__all__"

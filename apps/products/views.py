@@ -16,7 +16,6 @@ import json
 from apps.finance.models import Transaction, FinanceOutcome
 
 
-
 # Product Delete Manager
 class ProductDeleteManagerAPI(APIView):
     permission_classes = [IsAuthenticated]
@@ -75,12 +74,10 @@ class FormatViewSet(ModelViewSet):
     search_fields = ['name']
 
     def get_queryset(self):
-        # company_id = 1
         company_id = self.request.user.company_id
         queryset = Format.objects.filter(company_id=company_id)
         return queryset
 
-    # Optionally, you can override the list method to handle pagination explicitly
     def list(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
         page = self.paginate_queryset(queryset)
@@ -89,28 +86,27 @@ class FormatViewSet(ModelViewSet):
             return self.get_paginated_response(serializer.data)
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
+
     def retrieve(self, request, *args, **kwargs):
-        queryset = self.get_queryset()
-        serializer = self.get_serializer(queryset, many=True)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance)
         return Response(serializer.data)
+
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():
             serializer.save(company_id=request.user.company_id)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
     def update(self, request, *args, **kwargs):
         instance = self.get_object()
         serializer = self.get_serializer(instance, data=request.data)
         if serializer.is_valid():
             serializer.save()
-            return Response(serializer.data, status=status.HTTP_400_BAD_REQUEST)
+            return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    def destroy(self, request, *args, **kwargs):
-        instance = self.get_object()
-        instance.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
-    
+
 
 class CategoryViewSet(ModelViewSet):
     permission_classes = [IsAuthenticated]
@@ -183,7 +179,6 @@ class ProductViewSet(viewsets.ModelViewSet):
     search_fields = ("category__name","format__name","name", "bar_code","price")
 
     def get_queryset(self):
-        # company_id = 1
         company_id = self.request.user.company_id
         queryset = Product.objects.filter(company_id=company_id).order_by('-id')
         return queryset
@@ -191,7 +186,6 @@ class ProductViewSet(viewsets.ModelViewSet):
     def list(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
         page = self.paginate_queryset(queryset)
-
         if page is not None:
             serializer = self.get_serializer(page, many=True)
             return self.get_paginated_response(serializer.data)
@@ -219,7 +213,6 @@ class ProductViewSet(viewsets.ModelViewSet):
         instance = self.get_object()
         instance.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
-
 
 
 class ProductImportView(APIView):
@@ -269,7 +262,6 @@ class ALlProductViewSet(viewsets.ModelViewSet):
         company_id = self.request.user.company_id
         queryset = Product.objects.filter(company_id=company_id).order_by('-id')
         return queryset
-
 
 
 class ProductCreateAPIView(APIView):
@@ -349,7 +341,6 @@ class ProductCreateAPIView(APIView):
             "message": "Products created successfully.",
             "products": created_products
         }, status=status.HTTP_201_CREATED)
-
 
 
 class SupplierViewSet(viewsets.ModelViewSet):
@@ -648,7 +639,6 @@ class StorageProductCreate(APIView):
             return Response({"error": "Product not found"}, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
-
 
 
 class StorageProductOffViewSet(viewsets.ModelViewSet):
