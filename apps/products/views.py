@@ -279,7 +279,7 @@ class ProductImportView(APIView):
                             imported_products.append(ProductSerializer(product).data)
 
                         except ValueError as ve:
-                            return Response({"error": str(ve)}, status=status.HTTP_400_BAD_REQUEST)
+                            return Response({"error": "Excel faylda xatolik"}, status=status.HTTP_400_BAD_REQUEST)
 
                 return Response({
                     "success": "Mahsulotlar mucaffaqiyatli import qilindi",
@@ -287,7 +287,7 @@ class ProductImportView(APIView):
                 }, status=status.HTTP_201_CREATED)
 
             except Exception as e:
-                return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+                return Response({"error": "Excel faylda xatolik"}, status=status.HTTP_400_BAD_REQUEST)
 
         return Response({"error": "Excel faylda xatolik"}, status=status.HTTP_400_BAD_REQUEST)
 
