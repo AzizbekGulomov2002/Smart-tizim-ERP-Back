@@ -242,7 +242,7 @@ class ProductImportView(APIView):
 
                         # Validate product_type and storage_name
                         if product_type == "Sanaladigan" and not storage_name:
-                            raise ValueError(f"'{product_name}' nomli mahsulot Omborda 'Sanaladigan' turda. Unga ombor nomini kiritish kerak !")
+                            raise ValueError(f"'{product_name}' nomli mahsulot Omborda 'Sanaladigan' turda. Unga ombor nomini kiritish kerak!")
                         elif product_type == "Sanalmaydigan" and storage_name:
                             storage_name = None  # Ignore storage_name for 'Sanalmaydigan' products
 
@@ -260,7 +260,7 @@ class ProductImportView(APIView):
                         if storage_name:
                             storage, storage_created = Storage.objects.get_or_create(name=storage_name, company_id=company_id)
                             if storage_created:
-                                raise ValueError(f"'{storage_name}' korxonada ombor mavjud emas ")
+                                raise ValueError(f"'{storage_name}' korxonada ombor mavjud emas")
                         else:
                             storage = None
 
@@ -283,13 +283,12 @@ class ProductImportView(APIView):
                 }, status=status.HTTP_201_CREATED)
 
             except ValueError as ve:
-                return Response({"error": str(ve)}, status=status.HTTP_400_BAD_REQUEST)
+                return Response({"message": str(ve)}, status=status.HTTP_400_BAD_REQUEST)
 
             except Exception as e:
-                return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+                return Response({"message": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
 
 
 class ALlProductViewSet(viewsets.ModelViewSet):
