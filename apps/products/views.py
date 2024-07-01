@@ -176,7 +176,7 @@ class ProductViewSet(viewsets.ModelViewSet):
     pagination_class = BasePagination
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
     filterset_class = ProductFilter
-    search_fields = ("category__name", "format__name", "name", "bar_code", "price")
+    search_fields = ("category__name", "format__name", "storage__name","name", "bar_code", "price")
 
     def get_queryset(self):
         company_id = self.request.user.company_id
