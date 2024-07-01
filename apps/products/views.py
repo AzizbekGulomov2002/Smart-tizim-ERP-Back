@@ -743,8 +743,3 @@ class StorageProductOffViewSet(viewsets.ModelViewSet):
         instance.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
-
-class StorageProductTransferViewSet(viewsets.ModelViewSet):
-    queryset = StorageProductTransfer.objects.all()
-    serializer_class = StorageProductTransferSerializer
-    permission_classes = [IsAuthenticated]

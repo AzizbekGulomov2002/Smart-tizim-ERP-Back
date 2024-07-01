@@ -1,7 +1,6 @@
 from rest_framework import serializers
 
-from apps.products.models import Category, Product, Supplier, Storage, StorageProduct, Format, StorageProductOff, \
-    StorageProductTransfer
+from apps.products.models import Category, Product, Supplier, Storage, StorageProduct, Format, StorageProductOff
 
 
 class CategorySerializer(serializers.ModelSerializer):
