@@ -242,25 +242,28 @@ class ProductImportView(APIView):
 
                         # Validate product_type and storage_name
                         if product_type == "Sanaladigan" and not storage_name:
-                            raise ValueError(f"'{product_name}' nomli mahsulot Omborda 'Sanaladigan' turda. Unga ombor nomini kiritish kerak!")
+                            return Response({"error": f"'{product_name}' nomli mahsulot Omborda 'Sanaladigan' turda. Unga ombor nomini kiritish kerak!"},
+                                            status=status.HTTP_400_BAD_REQUEST)
                         elif product_type == "Sanalmaydigan" and storage_name:
                             storage_name = None  # Ignore storage_name for 'Sanalmaydigan' products
 
                         # Check if category exists
                         category, category_created = Category.objects.get_or_create(name=category_name, company_id=company_id)
                         if category_created:
-                            raise ValueError(f"Kategoriya '{category_name}' mavjud emas")
+                            return Response({"error": f"Kategoriya '{category_name}' mavjud emas"},
+                                            status=status.HTTP_400_BAD_REQUEST)
 
                         # Check if format exists
                         format, format_created = Format.objects.get_or_create(name=format_name, company_id=company_id)
                         if format_created:
-                            raise ValueError(f"Format '{format_name}' mavjud emas")
+                            return Response({"error": f"Format {format_name}' mavjud emas"},
+                                        status=status.HTTP_400_BAD_REQUEST)
 
                         # Check if storage exists
                         if storage_name:
                             storage, storage_created = Storage.objects.get_or_create(name=storage_name, company_id=company_id)
                             if storage_created:
-                                raise ValueError(f"'{storage_name}' korxonada ombor mavjud emas")
+                                return Response({"error": f"{storage_name}' korxonada ombor mavjud emas"}, status=status.HTTP_400_BAD_REQUEST)
                         else:
                             storage = None
 
