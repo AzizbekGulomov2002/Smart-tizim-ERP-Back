@@ -435,6 +435,10 @@ class SupplierViewSet(viewsets.ModelViewSet):
 class StorageViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
     serializer_class = StorageSerializer
+    pagination_class = BasePagination
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter]
+    filterset_class = StorageFilter
+    search_fields = ("name")
     def get_queryset(self):
         company_id = self.request.user.company_id
         queryset = Storage.objects.filter(company_id=company_id)
@@ -471,6 +475,7 @@ class StorageViewSet(viewsets.ModelViewSet):
         instance = self.get_object()
         instance.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
 
 class StorageProductViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]

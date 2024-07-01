@@ -38,8 +38,17 @@ class CategoryFilter(django_filters.FilterSet):
         fields = ['name']
 
 
+
 class FormatFilter(django_filters.FilterSet):
     name = django_filters.CharFilter(field_name="name", lookup_expr='icontains')
     class Meta:
         model = Format
+        fields = ['name']
+
+
+
+class StorageFilter(django_filters.FilterSet):
+    name = django_filters.CharFilter(field_name="name", lookup_expr='icontains')
+    class Meta:
+        model = Storage
         fields = ['name']
