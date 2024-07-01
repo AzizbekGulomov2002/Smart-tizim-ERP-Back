@@ -7,7 +7,7 @@ from rest_framework.viewsets import ModelViewSet
 from openpyxl import load_workbook
 from django.db import transaction
 from apps.app.views import BasePagination
-from apps.products.filters import ProductFilter, FormatFilter, CategoryFilter
+from apps.products.filters import ProductFilter, FormatFilter, CategoryFilter,StorageFilter
 from apps.products.serializers import  *
 from apps.products.decorator import is_storage_permission, is_product_permission
 from datetime import datetime, timedelta
