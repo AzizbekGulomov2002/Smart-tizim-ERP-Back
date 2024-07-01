@@ -33,7 +33,7 @@ class ProductSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Product
-        fields = ['id', 'name', 'product_type', 'category', 'category_id', 'price', 'format', 'format_id', 'bar_code', 'storage_products', 'current_total_count']
+        fields = ['id', 'name','storage', 'product_type', 'category', 'category_id', 'price', 'format', 'format_id', 'bar_code', 'storage_products', 'current_total_count']
         depth = 1
 
     def update(self, instance, validated_data):

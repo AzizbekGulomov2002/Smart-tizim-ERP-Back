@@ -229,7 +229,6 @@ class ProductImportView(APIView):
                 workbook = load_workbook(file)
                 sheet = workbook.active
                 imported_products = []
-
                 with transaction.atomic():
                     for row in sheet.iter_rows(min_row=2, values_only=True):
                         category_name = row[0]
@@ -239,6 +238,12 @@ class ProductImportView(APIView):
                         price = int(row[4])
                         bar_code = row[5] if row[5] else None
                         storage_name = row[6] if row[6] else None  # Assuming storage name is in column 7
+
+                        # Validate product_type and storage_name
+                        if product_type == "Sanaladigan" and not storage_name:
+                            raise ValueError(f"'{product_name}' nomli mahsulot Omborda 'Sanaladigan' turda. Unga ombor nomini kiritish kerak !")
+                        elif product_type == "Sanalmaydigan" and storage_name:
+                            storage_name = None  # Ignore storage_name for 'Sanalmaydigan' products
 
                         # Check if category exists
                         category, category_created = Category.objects.get_or_create(name=category_name, company_id=company_id)
@@ -254,7 +259,7 @@ class ProductImportView(APIView):
                         if storage_name:
                             storage, storage_created = Storage.objects.get_or_create(name=storage_name, company_id=company_id)
                             if storage_created:
-                                raise ValueError(f"Ombor: '{storage_name}' bu {company_id} korxonada mavjud emas ")
+                                raise ValueError(f"'{storage_name}' korxonada ombor mavjud emas ")
                         else:
                             storage = None
 
@@ -283,6 +288,7 @@ class ProductImportView(APIView):
                 return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 
 
