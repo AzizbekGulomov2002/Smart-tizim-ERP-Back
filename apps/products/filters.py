@@ -1,5 +1,5 @@
 import django_filters
-from apps.products.models import Product, Category, Format
+from apps.products.models import Product, Category, Format,Storage
 from django.db.models import Q
 
 
