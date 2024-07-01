@@ -36,8 +36,9 @@ class ProductSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
         fields = ['id', 'name', 'storage', 'storage_id', 'product_type', 'category', 'category_id', 'price', 'format',
-                  'format_id', 'bar_code', 'storage_products', 'current_total_count']
+                  'format_id', 'bar_code', 'current_total_count']
         depth = 1
+
 
     def update(self, instance, validated_data):
         if 'category' in validated_data:
