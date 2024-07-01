@@ -240,56 +240,56 @@ class ProductImportView(APIView):
                         bar_code = row[5] if row[5] else None
                         storage_name = row[6] if row[6] else None  # Assuming storage name is in column 7
 
-                        try:
-                            # Validate product_type and storage_name
-                            if product_type == "Sanaladigan" and not storage_name:
-                                raise ValueError(f"'{product_name}' nomli mahsulot Omborda 'Sanaladigan' turda. Unga ombor nomini kiritish kerak!")
-                            elif product_type == "Sanalmaydigan" and storage_name:
-                                storage_name = None  # Ignore storage_name for 'Sanalmaydigan' products
+                        # Validate product_type and storage_name
+                        if product_type == "Sanaladigan" and not storage_name:
+                            raise ValueError(f"'{product_name}' nomli mahsulot Omborda 'Sanaladigan' turda. Unga ombor nomini kiritish kerak!")
+                        elif product_type == "Sanalmaydigan" and storage_name:
+                            storage_name = None  # Ignore storage_name for 'Sanalmaydigan' products
 
-                            # Check if category exists
-                            category, category_created = Category.objects.get_or_create(name=category_name, company_id=company_id)
-                            if category_created:
-                                raise ValueError(f"Kategoriya '{category_name}' mavjud emas")
+                        # Check if category exists
+                        category, category_created = Category.objects.get_or_create(name=category_name, company_id=company_id)
+                        if category_created:
+                            raise ValueError(f"Kategoriya '{category_name}' mavjud emas")
 
-                            # Check if format exists
-                            format, format_created = Format.objects.get_or_create(name=format_name, company_id=company_id)
-                            if format_created:
-                                raise ValueError(f"Format '{format_name}' mavjud emas")
+                        # Check if format exists
+                        format, format_created = Format.objects.get_or_create(name=format_name, company_id=company_id)
+                        if format_created:
+                            raise ValueError(f"Format '{format_name}' mavjud emas")
 
-                            # Check if storage exists
-                            if storage_name:
-                                storage, storage_created = Storage.objects.get_or_create(name=storage_name, company_id=company_id)
-                                if storage_created:
-                                    raise ValueError(f"'{storage_name}' korxonada ombor mavjud emas")
-                            else:
-                                storage = None
+                        # Check if storage exists
+                        if storage_name:
+                            storage, storage_created = Storage.objects.get_or_create(name=storage_name, company_id=company_id)
+                            if storage_created:
+                                raise ValueError(f"'{storage_name}' korxonada ombor mavjud emas")
+                        else:
+                            storage = None
 
-                            product = Product.objects.create(
-                                company_id=company_id,
-                                name=product_name,
-                                product_type=product_type,
-                                category=category,
-                                format=format,
-                                price=price,
-                                bar_code=bar_code,
-                                storage=storage
-                            )
+                        product = Product.objects.create(
+                            company_id=company_id,
+                            name=product_name,
+                            product_type=product_type,
+                            category=category,
+                            format=format,
+                            price=price,
+                            bar_code=bar_code,
+                            storage=storage
+                        )
 
-                            imported_products.append(ProductSerializer(product).data)
-
-                        except ValueError as ve:
-                            return Response({"error": "Excel faylda xatolik"}, status=status.HTTP_400_BAD_REQUEST)
+                        imported_products.append(ProductSerializer(product).data)
 
                 return Response({
                     "success": "Mahsulotlar mucaffaqiyatli import qilindi",
                     "products": imported_products
                 }, status=status.HTTP_201_CREATED)
 
-            except Exception as e:
-                return Response({"error": "Excel faylda xatolik"}, status=status.HTTP_400_BAD_REQUEST)
+            except ValueError as ve:
+                return Response({"error": str(ve)}, status=status.HTTP_400_BAD_REQUEST)
 
-        return Response({"error": "Excel faylda xatolik"}, status=status.HTTP_400_BAD_REQUEST)
+            except Exception as e:
+                return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 
 class ALlProductViewSet(viewsets.ModelViewSet):
