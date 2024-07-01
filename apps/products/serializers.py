@@ -1,6 +1,7 @@
 from rest_framework import serializers
 
-from apps.products.models import Category, Product, Supplier, Storage, StorageProduct ,Format,StorageProductOff
+from apps.products.models import Category, Product, Supplier, Storage, StorageProduct, Format, StorageProductOff, \
+    StorageProductTransfer
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -28,12 +29,12 @@ class  FormatSerializer(serializers.ModelSerializer):
 class ProductSerializer(serializers.ModelSerializer):
     category = CategorySerializer(read_only=True)
     format = FormatSerializer(read_only=True)
-    category_id = serializers.PrimaryKeyRelatedField(queryset=Category.objects.all(), source='category', write_only=True)
-    format_id = serializers.PrimaryKeyRelatedField(queryset=Format.objects.all(), source='format', write_only=True)
+    # category_id = serializers.PrimaryKeyRelatedField(queryset=Category.objects.all(), source='category', write_only=True)
+    # format_id = serializers.PrimaryKeyRelatedField(queryset=Format.objects.all(), source='format', write_only=True)
 
     class Meta:
         model = Product
-        fields = ['id', 'name','storage', 'product_type', 'category', 'category_id', 'price', 'format', 'format_id', 'bar_code', 'storage_products', 'current_total_count']
+        fields = ['id', 'name','storage', 'product_type', 'category', 'category_id', 'price', 'format', 'format_id', 'bar_code', 'storage_products','current_total_count']
         depth = 1
 
     def update(self, instance, validated_data):
@@ -58,5 +59,11 @@ class StorageProductOffSerializer(serializers.ModelSerializer):
     class Meta:
         model = StorageProductOff
         fields = "__all__"
+
+
+class StorageProductTransferSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = StorageProductTransfer
+        fields = '__all__'
     
     

@@ -1,13 +1,13 @@
 from django.core.exceptions import ObjectDoesNotExist
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import viewsets, status, filters
+from rest_framework import viewsets, status, filters, generics
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 from openpyxl import load_workbook
 from django.db import transaction
 from apps.app.views import BasePagination
-from apps.products.filters import ProductFilter, FormatFilter, CategoryFilter,StorageFilter
+from apps.products.filters import ProductFilter, FormatFilter, CategoryFilter, StorageFilter
 from apps.products.serializers import  *
 from apps.products.decorator import is_storage_permission, is_product_permission
 from datetime import datetime, timedelta
@@ -290,17 +290,6 @@ class ProductImportView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class AllStorageViewSet(ModelViewSet):
-    permission_classes = [IsAuthenticated]
-    serializer_class = StorageSerializer
-    filter_backends = [DjangoFilterBackend, filters.OrderingFilter, filters.SearchFilter]
-    ordering_fields = ['name']
-    search_fields = ['name']
-    def get_queryset(self):
-        company_id = self.request.user.company_id
-        queryset = Storage.objects.filter(company_id=company_id)
-        return queryset
-
 
 class ALlProductViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
@@ -323,15 +312,18 @@ class ProductCreateAPIView(APIView):
         products = Product.objects.filter(company_id=company_id)
         categories = Category.objects.filter(company_id=company_id)
         formats = Format.objects.filter(company_id=company_id)
+        storages = Storage.objects.all()  # Fetch all storages
 
         product_serializer = ProductSerializer(products, many=True)
         category_serializer = CategorySerializer(categories, many=True)
         format_serializer = FormatSerializer(formats, many=True)
+        storage_serializer = StorageSerializer(storages, many=True)
 
         return Response({
             "products": product_serializer.data,
             "categories": category_serializer.data,
-            "formats": format_serializer.data
+            "formats": format_serializer.data,
+            "storages": storage_serializer.data  # Include storage data
         })
 
     def post(self, request):
@@ -352,21 +344,28 @@ class ProductCreateAPIView(APIView):
             format_id = item.get("format_id")
             product_type = item.get("product_type")
             bar_code = item.get("bar_code", "")
+            storage_id = item.get("storage_id")  # Get storage_id from request data
 
-            if not all([name, price, category_id, format_id]):
-                errors.update({"error": "name, price, category_id, and format_id har bir mahsulot uchun berilishi zarur"})
+            if not all([name, price, category_id, format_id, storage_id]):
+                errors.update({"error": "name, price, category_id, format_id, and storage_id are required for each product."})
                 continue
 
             try:
                 category = Category.objects.get(company_id=company_id, id=category_id)
             except Category.DoesNotExist:
-                errors.update({"error": f"Noto'g'ri category_id {category_id} for the given company."})
+                errors.update({"error": f"Invalid category_id {category_id} for the given company."})
                 continue
 
             try:
                 format = Format.objects.get(company_id=company_id, id=format_id)
             except Format.DoesNotExist:
-                errors.update({"error": f"Noto'g'ri format_id {format_id} for the given company."})
+                errors.update({"error": f"Invalid format_id {format_id} for the given company."})
+                continue
+
+            try:
+                storage = Storage.objects.get(id=storage_id)
+            except Storage.DoesNotExist:
+                errors.update({"error": f"Invalid storage_id {storage_id}."})
                 continue
 
             # Create the product
@@ -378,6 +377,7 @@ class ProductCreateAPIView(APIView):
                 format=format,
                 price=price,
                 bar_code=bar_code,
+                storage=storage  # Assign storage to the product
             )
             product.save()
             created_products.update({product.id: ProductSerializer(product).data})
@@ -392,7 +392,6 @@ class ProductCreateAPIView(APIView):
             "message": "Products created successfully.",
             "products": created_products
         }, status=status.HTTP_201_CREATED)
-
 
 class SupplierViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
@@ -431,6 +430,19 @@ class SupplierViewSet(viewsets.ModelViewSet):
         instance = self.get_object()
         instance.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class AllStorageViewSet(ModelViewSet):
+    permission_classes = [IsAuthenticated]
+    serializer_class = StorageSerializer
+    filter_backends = [DjangoFilterBackend, filters.OrderingFilter, filters.SearchFilter]
+    ordering_fields = ['name']
+    search_fields = ['name']
+    def get_queryset(self):
+        company_id = self.request.user.company_id
+        queryset = Storage.objects.filter(company_id=company_id)
+        return queryset
+
 
 class StorageViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
@@ -475,7 +487,6 @@ class StorageViewSet(viewsets.ModelViewSet):
         instance = self.get_object()
         instance.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
-
 
 class StorageProductViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
@@ -731,3 +742,9 @@ class StorageProductOffViewSet(viewsets.ModelViewSet):
         instance = self.get_object()
         instance.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class StorageProductTransferViewSet(viewsets.ModelViewSet):
+    queryset = StorageProductTransfer.objects.all()
+    serializer_class = StorageProductTransferSerializer
+    permission_classes = [IsAuthenticated]
