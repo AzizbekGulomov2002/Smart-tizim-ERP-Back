@@ -290,7 +290,16 @@ class ProductImportView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-
+class AllStorageViewSet(ModelViewSet):
+    permission_classes = [IsAuthenticated]
+    serializer_class = StorageSerializer
+    filter_backends = [DjangoFilterBackend, filters.OrderingFilter, filters.SearchFilter]
+    ordering_fields = ['name']
+    search_fields = ['name']
+    def get_queryset(self):
+        company_id = self.request.user.company_id
+        queryset = Storage.objects.filter(company_id=company_id)
+        return queryset
 
 
 class ALlProductViewSet(viewsets.ModelViewSet):

@@ -16,7 +16,10 @@ router.register(r'formats', FormatViewSet, basename='formats')
 router.register(r'all_formats', AllFormatViewSet, basename='all_formats')
 
 router.register(r'suppliers', SupplierViewSet, basename='suppliers')
+
 router.register(r'storages', StorageViewSet, basename='storages')
+router.register(r'all_storages', StorageViewSet, basename='all_storages')
+
 router.register(r'storage_products', StorageProductViewSet, basename='storage_products')
 router.register(r'storage_products_off', StorageProductOffViewSet, basename='storage_products_off')
 
