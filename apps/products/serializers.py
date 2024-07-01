@@ -28,12 +28,15 @@ class  FormatSerializer(serializers.ModelSerializer):
 class ProductSerializer(serializers.ModelSerializer):
     category = CategorySerializer(read_only=True)
     format = FormatSerializer(read_only=True)
-    # category_id = serializers.PrimaryKeyRelatedField(queryset=Category.objects.all(), source='category', write_only=True)
-    # format_id = serializers.PrimaryKeyRelatedField(queryset=Format.objects.all(), source='format', write_only=True)
+    category_id = serializers.PrimaryKeyRelatedField(queryset=Category.objects.all(), source='category',
+                                                     write_only=True)
+    format_id = serializers.PrimaryKeyRelatedField(queryset=Format.objects.all(), source='format', write_only=True)
+    storage_id = serializers.PrimaryKeyRelatedField(queryset=Storage.objects.all(), source='storage', write_only=True)
 
     class Meta:
         model = Product
-        fields = ['id', 'name','storage', 'product_type', 'category', 'category_id', 'price', 'format', 'format_id', 'bar_code', 'storage_products','current_total_count']
+        fields = ['id', 'name', 'storage', 'storage_id', 'product_type', 'category', 'category_id', 'price', 'format',
+                  'format_id', 'bar_code', 'storage_products', 'current_total_count']
         depth = 1
 
     def update(self, instance, validated_data):
@@ -41,6 +44,15 @@ class ProductSerializer(serializers.ModelSerializer):
             instance.category = validated_data.pop('category')
         if 'format' in validated_data:
             instance.format = validated_data.pop('format')
+        if 'storage' in validated_data:
+            instance.storage = validated_data.pop('storage')
+
+        # Check if product_type is being updated
+        if 'product_type' in validated_data:
+            product_type = validated_data['product_type']
+            if product_type == 'Sanalmaydigan':
+                instance.storage = None
+
         return super().update(instance, validated_data)
 
 class ProductImportSerializer(serializers.Serializer):
