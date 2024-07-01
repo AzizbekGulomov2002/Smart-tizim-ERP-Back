@@ -59,10 +59,3 @@ class StorageProductOffSerializer(serializers.ModelSerializer):
         model = StorageProductOff
         fields = "__all__"
 
-
-class StorageProductTransferSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = StorageProductTransfer
-        fields = '__all__'
-    
-    
